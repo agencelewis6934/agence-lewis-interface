@@ -1,28 +1,56 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import type { Session, User } from '@supabase/supabase-js';
 
 interface AuthContextType {
     session: Session | null;
     user: User | null;
     signIn: (email: string, password: string) => Promise<{ error: any }>;
-    signUp: (email: string, password: string, fullName: string) => Promise<{ error: any }>;
+    signUp: (email: string, password: string) => Promise<{ error: any }>;
     signOut: () => Promise<void>;
     loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-    const [session, setSession] = useState<Session | null>(null);
-    const [user, setUser] = useState<User | null>(null);
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+    // Initialize from localStorage
+    const [session, setSession] = useState<Session | null>(() => {
+        const saved = localStorage.getItem('auth_session');
+        return saved ? JSON.parse(saved) : null;
+    });
+
+    const [user, setUser] = useState<User | null>(() => {
+        const saved = localStorage.getItem('auth_user');
+        return saved ? JSON.parse(saved) : null;
+    });
+
     const [loading, setLoading] = useState(true);
+
+    // Save to localStorage whenever session/user changes
+    useEffect(() => {
+        if (session) {
+            localStorage.setItem('auth_session', JSON.stringify(session));
+        } else {
+            localStorage.removeItem('auth_session');
+        }
+    }, [session]);
+
+    useEffect(() => {
+        if (user) {
+            localStorage.setItem('auth_user', JSON.stringify(user));
+        } else {
+            localStorage.removeItem('auth_user');
+        }
+    }, [user]);
 
     useEffect(() => {
         // Check active session
         supabase.auth.getSession().then(({ data: { session } }) => {
-            setSession(session);
-            setUser(session?.user ?? null);
+            if (session) {
+                setSession(session);
+                setUser(session?.user ?? null);
+            }
             setLoading(false);
         });
 
@@ -68,21 +96,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
     };
 
-    const signUp = async (email: string, password: string, fullName: string) => {
+    const signUp = async (email: string, password: string) => {
         const { error } = await supabase.auth.signUp({
             email,
-            password,
-            options: {
-                data: {
-                    full_name: fullName,
-                }
-            }
+            password
         });
         return { error };
     };
 
     const signOut = async () => {
         await supabase.auth.signOut();
+        setSession(null);
+        setUser(null);
+        localStorage.removeItem('auth_session');
+        localStorage.removeItem('auth_user');
     };
 
     const value = {
