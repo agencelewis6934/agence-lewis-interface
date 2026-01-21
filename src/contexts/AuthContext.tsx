@@ -15,13 +15,15 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Initialize from localStorage
-    const [session, setSessionState] = useState<Session | null>(() => {
+    const [session, setSession] = useState<Session | null>(() => {
         const saved = localStorage.getItem('auth_session');
+        console.log('[Auth] Initializing session from localStorage:', saved ? 'FOUND' : 'NOT FOUND');
         return saved ? JSON.parse(saved) : null;
     });
 
-    const [user, setUserState] = useState<User | null>(() => {
+    const [user, setUser] = useState<User | null>(() => {
         const saved = localStorage.getItem('auth_user');
+        console.log('[Auth] Initializing user from localStorage:', saved ? 'FOUND' : 'NOT FOUND');
         return saved ? JSON.parse(saved) : null;
     });
 
@@ -33,24 +35,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return !hasSession;
     });
 
-    // Wrapper functions to update both state and localStorage
-    const setSession = (newSession: Session | null) => {
-        setSessionState(newSession);
-        if (newSession) {
-            localStorage.setItem('auth_session', JSON.stringify(newSession));
+    // Sync session to localStorage whenever it changes
+    useEffect(() => {
+        if (session) {
+            console.log('[Auth] Saving session to localStorage');
+            localStorage.setItem('auth_session', JSON.stringify(session));
         } else {
+            console.log('[Auth] Removing session from localStorage');
             localStorage.removeItem('auth_session');
         }
-    };
+    }, [session]);
 
-    const setUser = (newUser: User | null) => {
-        setUserState(newUser);
-        if (newUser) {
-            localStorage.setItem('auth_user', JSON.stringify(newUser));
+    // Sync user to localStorage whenever it changes
+    useEffect(() => {
+        if (user) {
+            console.log('[Auth] Saving user to localStorage');
+            localStorage.setItem('auth_user', JSON.stringify(user));
         } else {
+            console.log('[Auth] Removing user from localStorage');
             localStorage.removeItem('auth_user');
         }
-    };
+    }, [user]);
 
     useEffect(() => {
         // Check active session from Supabase
