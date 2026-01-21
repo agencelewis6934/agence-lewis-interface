@@ -15,37 +15,42 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Initialize from localStorage
-    const [session, setSession] = useState<Session | null>(() => {
+    const [session, setSessionState] = useState<Session | null>(() => {
         const saved = localStorage.getItem('auth_session');
         return saved ? JSON.parse(saved) : null;
     });
 
-    const [user, setUser] = useState<User | null>(() => {
+    const [user, setUserState] = useState<User | null>(() => {
         const saved = localStorage.getItem('auth_user');
         return saved ? JSON.parse(saved) : null;
     });
 
-    const [loading, setLoading] = useState(true);
+    // Start with loading=false if we have a session in localStorage
+    const [loading, setLoading] = useState(() => {
+        return !localStorage.getItem('auth_session');
+    });
 
-    // Save to localStorage whenever session/user changes
-    useEffect(() => {
-        if (session) {
-            localStorage.setItem('auth_session', JSON.stringify(session));
+    // Wrapper functions to update both state and localStorage
+    const setSession = (newSession: Session | null) => {
+        setSessionState(newSession);
+        if (newSession) {
+            localStorage.setItem('auth_session', JSON.stringify(newSession));
         } else {
             localStorage.removeItem('auth_session');
         }
-    }, [session]);
+    };
 
-    useEffect(() => {
-        if (user) {
-            localStorage.setItem('auth_user', JSON.stringify(user));
+    const setUser = (newUser: User | null) => {
+        setUserState(newUser);
+        if (newUser) {
+            localStorage.setItem('auth_user', JSON.stringify(newUser));
         } else {
             localStorage.removeItem('auth_user');
         }
-    }, [user]);
+    };
 
     useEffect(() => {
-        // Check active session
+        // Check active session from Supabase
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session) {
                 setSession(session);
@@ -54,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setLoading(false);
         });
 
-        // Listen for changes
+        // Listen for auth changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
             setUser(session?.user ?? null);
@@ -108,8 +113,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await supabase.auth.signOut();
         setSession(null);
         setUser(null);
-        localStorage.removeItem('auth_session');
-        localStorage.removeItem('auth_user');
     };
 
     const value = {
