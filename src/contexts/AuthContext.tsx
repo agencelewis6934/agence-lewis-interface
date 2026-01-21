@@ -94,12 +94,34 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        // Dev bypass for admin credentials
-        if (email === 'admin@agencelewis.com' && password === 'Admin123!') {
+        // Define allowed users
+        const allowedUsers = [
+            {
+                email: 'a.payet@agence-lewis.fr',
+                password: 'Admin123@!',
+                id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                full_name: 'Angel'
+            },
+            {
+                email: 'a.pivetti@agence-lewis.fr',
+                password: 'Admin123@!',
+                id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                full_name: 'Antoine'
+            }
+        ];
+
+        // Check if credentials match any allowed user
+        const matchedUser = allowedUsers.find(
+            u => u.email === email && u.password === password
+        );
+
+        if (matchedUser) {
+            console.log(`[Auth] Bypass login for ${matchedUser.full_name}`);
+
             const mockUser = {
-                id: '11111111-1111-1111-1111-111111111111',
-                email: email,
-                user_metadata: { full_name: 'Admin Lewis' },
+                id: matchedUser.id,
+                email: matchedUser.email,
+                user_metadata: { full_name: matchedUser.full_name },
                 app_metadata: {},
                 aud: 'authenticated',
                 created_at: new Date().toISOString()
@@ -118,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             return { error: null };
         }
 
+        // If not a bypass user, try real Supabase auth (will likely fail)
         const { error } = await supabase.auth.signInWithPassword({
             email,
             password
