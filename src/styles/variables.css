@@ -1,0 +1,43 @@
+:root {
+    /* Brand Colors - Standardized */
+    --color-primary: #F43F5E;
+    /* Rose-500 */
+    --color-primary-hover: #E11D48;
+    /* Rose-600 */
+
+    --color-secondary: #8B5CF6;
+    /* Violet-500 */
+
+    /* Neutrals - Clean Dark Theme */
+    --color-background: #09090B;
+    /* Main background - darker than surface */
+    --color-surface: #1A1A1A;
+    /* Cards/Sidebar/Inputs - The user's preferred #1A1A1A */
+    --color-surface-hover: #27272A;
+    /* Slightly lighter for hover */
+
+    --color-border: #262626;
+    /* Neutral-800 */
+    --color-border-subtle: #1F1F1F;
+    --color-border-highlight: #404040;
+
+    /* Text Colors */
+    --color-text-main: #FFFFFF;
+    --color-text-muted: #9CA3AF;
+    /* Gray-400 */
+    --color-text-subtle: #6B7280;
+    /* Gray-500 */
+
+    /* Spacing */
+    --spacing-sm: 0.5rem;
+    --spacing-md: 1rem;
+    --spacing-lg: 1.5rem;
+    --spacing-xl: 2rem;
+
+    /* Radius */
+    --radius-md: 0.75rem;
+    /* 12px for modern feel */
+    --radius-lg: 1rem;
+    /* 16px for cards */
+    --radius-full: 9999px;
+}
