@@ -37,12 +37,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        // Dev bypass for specific admin credentials
-        if (email === 'angelpayet2006@gmail.com' && password === 'Admin123') {
+        // Dev bypass for admin credentials
+        if (email === 'admin@agencelewis.com' && password === 'Admin123!') {
             const mockUser = {
-                id: '00000000-0000-0000-0000-000000000000',
+                id: '11111111-1111-1111-1111-111111111111',
                 email: email,
-                user_metadata: { full_name: 'Admin' },
+                user_metadata: { full_name: 'Admin Lewis' },
                 app_metadata: {},
                 aud: 'authenticated',
                 created_at: new Date().toISOString()
