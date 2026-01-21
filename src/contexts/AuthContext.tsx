@@ -27,7 +27,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Start with loading=false if we have a session in localStorage
     const [loading, setLoading] = useState(() => {
-        return !localStorage.getItem('auth_session');
+        const hasSession = !!localStorage.getItem('auth_session');
+        console.log('[Auth] Has session in localStorage:', hasSession);
+        console.log('[Auth] Setting initial loading to:', !hasSession);
+        return !hasSession;
     });
 
     // Wrapper functions to update both state and localStorage
