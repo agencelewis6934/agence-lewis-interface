@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, FolderKanban, Users, Settings, Briefcase, Bell, Inbox } from 'lucide-react';
+import { LayoutDashboard, FolderKanban, Users, Settings, Briefcase, Bell, Inbox, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export const Sidebar: React.FC = () => {
@@ -26,6 +26,7 @@ export const Sidebar: React.FC = () => {
                 <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-text-muted">General</div>
                 <nav className="flex flex-col gap-1">
                     <NavItem to="/inbox" icon={<Inbox size={20} />} label="Inbox" badge="2" />
+                    <NavItem to="/chat" icon={<MessageSquare size={20} />} label="Chat" />
                     <NavItem to="/notifications" icon={<Bell size={20} />} label="Alerts" />
                     <NavItem to="/settings" icon={<Settings size={20} />} label="Settings" />
                 </nav>

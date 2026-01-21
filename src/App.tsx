@@ -9,6 +9,7 @@ import { Team } from './pages/Team';
 import { Settings } from './pages/Settings';
 import { Inbox } from './pages/Inbox';
 import { Notifications } from './pages/Notifications';
+import { Chat } from './pages/Chat';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 
@@ -37,6 +38,7 @@ function App() {
             <Route path="/team" element={<Team />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/inbox" element={<Inbox />} />
+            <Route path="/chat" element={<Chat />} />
             <Route path="/notifications" element={<Notifications />} />
           </Route>
 
