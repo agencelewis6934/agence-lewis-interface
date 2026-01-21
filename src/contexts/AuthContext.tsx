@@ -58,19 +58,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, [user]);
 
     useEffect(() => {
-        // Check active session from Supabase
-        supabase.auth.getSession().then(({ data: { session } }) => {
-            if (session) {
+        // Only check Supabase session if we don't already have a bypass session in localStorage
+        const hasLocalSession = !!localStorage.getItem('auth_session');
+
+        if (!hasLocalSession) {
+            console.log('[Auth] No local session, checking Supabase...');
+            // Check active session from Supabase
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    console.log('[Auth] Found Supabase session');
+                    setSession(session);
+                    setUser(session?.user ?? null);
+                }
+                setLoading(false);
+            });
+        } else {
+            console.log('[Auth] Using local bypass session, skipping Supabase check');
+            setLoading(false);
+        }
+
+        // Listen for auth changes (but don't overwrite bypass sessions)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            const hasLocalSession = !!localStorage.getItem('auth_session');
+            if (!hasLocalSession) {
+                console.log('[Auth] Auth state changed, updating session');
                 setSession(session);
                 setUser(session?.user ?? null);
+            } else {
+                console.log('[Auth] Auth state changed but preserving local bypass session');
             }
-            setLoading(false);
-        });
-
-        // Listen for auth changes
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            setSession(session);
-            setUser(session?.user ?? null);
             setLoading(false);
         });
 
