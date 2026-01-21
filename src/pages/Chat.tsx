@@ -121,10 +121,14 @@ export function Chat() {
         try {
             // For development: show ALL conversations, not just user's
             console.log('[Chat] Fetching all conversations (dev mode)');
+            console.log('[Chat] Supabase URL:', supabase.supabaseUrl);
+
             const { data, error } = await supabase
                 .from('chat_conversations')
                 .select('*')
                 .order('created_at', { ascending: false });
+
+            console.log('[Chat] Fetch result:', { data, error });
 
             if (error) {
                 console.error('[Chat] Error fetching conversations:', error);
@@ -139,7 +143,7 @@ export function Chat() {
                 last_read_at: null
             })) || [];
 
-            console.log('[Chat] Loaded conversations:', convos.length);
+            console.log('[Chat] Loaded conversations:', convos.length, convos);
             setConversations(convos);
         } catch (error: any) {
             console.error('[Chat] Error fetching conversations:', error);
