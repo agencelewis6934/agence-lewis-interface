@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Clients } from './pages/Clients';
@@ -26,9 +27,11 @@ function App() {
 
           <Route
             element={
-              <DashboardLayout>
-                <Outlet />
-              </DashboardLayout>
+              <ProtectedRoute>
+                <DashboardLayout>
+                  <Outlet />
+                </DashboardLayout>
+              </ProtectedRoute>
             }
           >
             <Route path="/" element={<Dashboard />} />
