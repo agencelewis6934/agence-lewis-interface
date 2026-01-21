@@ -76,45 +76,10 @@ export function Chat() {
     }, [messages]);
 
     const checkAdminAccess = async () => {
-        if (!user) {
-            // For development: allow access without auth
-            console.log('[Chat] No user found, allowing dev access');
-            setLoading(false);
-            await fetchConversations();
-            return;
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
-
-            if (error) {
-                console.error('[Chat] Error fetching profile:', error);
-                // Allow access anyway for dev
-                setLoading(false);
-                await fetchConversations();
-                return;
-            }
-
-            if (data && data.role !== 'admin') {
-                toast.error('Accès refusé - Réservé aux administrateurs');
-                window.location.href = '/';
-                return;
-            }
-
-            setUserProfile(data);
-            await fetchConversations();
-        } catch (error: any) {
-            console.error('[Chat] Error checking admin access:', error);
-            // Allow access anyway for dev
-            setLoading(false);
-            await fetchConversations();
-        } finally {
-            setLoading(false);
-        }
+        // For development: skip auth check and just load conversations
+        console.log('[Chat] Dev mode - skipping admin check');
+        setLoading(false);
+        await fetchConversations();
     };
 
     const fetchConversations = async () => {
