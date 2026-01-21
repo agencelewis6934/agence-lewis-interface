@@ -119,26 +119,12 @@ export function Chat() {
 
     const fetchConversations = async () => {
         try {
-            if (!user?.id) {
-                console.log('[Chat] No user ID, skipping conversation fetch');
-                setConversations([]);
-                return;
-            }
-
-            console.log('[Chat] Fetching conversations for user:', user.id);
+            // For development: show ALL conversations, not just user's
+            console.log('[Chat] Fetching all conversations (dev mode)');
             const { data, error } = await supabase
-                .from('chat_conversation_members')
-                .select(`
-                    conversation_id,
-                    last_read_at,
-                    chat_conversations!inner (
-                        id,
-                        type,
-                        name,
-                        created_at
-                    )
-                `)
-                .eq('user_id', user.id);
+                .from('chat_conversations')
+                .select('*')
+                .order('created_at', { ascending: false });
 
             if (error) {
                 console.error('[Chat] Error fetching conversations:', error);
@@ -146,11 +132,11 @@ export function Chat() {
             }
 
             const convos = data?.map((item: any) => ({
-                id: item.chat_conversations.id,
-                type: item.chat_conversations.type,
-                name: item.chat_conversations.name,
-                created_at: item.chat_conversations.created_at,
-                last_read_at: item.last_read_at
+                id: item.id,
+                type: item.type,
+                name: item.name,
+                created_at: item.created_at,
+                last_read_at: null
             })) || [];
 
             console.log('[Chat] Loaded conversations:', convos.length);
