@@ -53,15 +53,29 @@ export function Inbox() {
     const fetchEmails = async () => {
         try {
             setLoading(true);
+            console.log('[Inbox] Fetching emails from Supabase table: emails');
+
             const { data, error } = await supabase
                 .from('emails')
                 .select('*')
                 .order('created_at', { ascending: false });
 
-            if (error) throw error;
-            if (data) setEmails(data);
+            console.log('[Inbox] Supabase response:', { data, error, count: data?.length || 0 });
+
+            if (error) {
+                console.error('[Inbox] Supabase error:', error);
+                throw error;
+            }
+
+            if (data) {
+                console.log('[Inbox] Successfully loaded', data.length, 'emails');
+                setEmails(data);
+            } else {
+                console.warn('[Inbox] No data returned from Supabase');
+                setEmails([]);
+            }
         } catch (error: any) {
-            console.error('Error fetching emails:', error);
+            console.error('[Inbox] Error fetching emails:', error);
             toast.error('Erreur lors du chargement des emails');
         } finally {
             setLoading(false);
@@ -233,8 +247,8 @@ export function Inbox() {
                                         }
                                     }}
                                     className={`p-4 rounded-xl cursor-pointer transition-all border ${selectedEmailId === email.id
-                                            ? 'bg-primary/5 border-primary/20 shadow-md'
-                                            : 'bg-transparent border-transparent hover:bg-surface-hover hover:border-border-subtle'
+                                        ? 'bg-primary/5 border-primary/20 shadow-md'
+                                        : 'bg-transparent border-transparent hover:bg-surface-hover hover:border-border-subtle'
                                         }`}
                                 >
                                     <div className="flex justify-between items-start mb-2">
