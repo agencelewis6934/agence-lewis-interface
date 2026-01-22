@@ -3,7 +3,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
 import {
     Search, Plus, Hash, User, Send, Paperclip,
-    MoreVertical, Users, MessageSquare, Loader2
+    MoreVertical, Users, MessageSquare, Loader2, Star
 } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
@@ -37,6 +37,7 @@ interface Message {
     content: string;
     created_at: string;
     edited_at: string | null;
+    is_starred?: boolean;
     sender?: Profile;
 }
 
@@ -115,17 +116,40 @@ export function Chat() {
         }
     };
 
+
     const fetchMessages = async (conversationId: string) => {
         try {
             console.log('[Chat] 🔍 Fetching messages for conversation:', conversationId);
 
-            // Fetch messages without the FK relation syntax
-            const { data: messagesData, error: messagesError } = await supabase
-                .from('chat_messages')
-                .select('*')
-                .eq('conversation_id', conversationId)
-                .is('deleted_at', null)
-                .order('created_at', { ascending: true });
+            // Special handling for "Important" channel - fetch all starred messages
+            const isImportantChannel = conversationId === '00000000-0000-0000-0000-000000000099';
+
+            let messagesData;
+            let messagesError;
+
+            if (isImportantChannel) {
+                // Fetch all starred messages from all conversations
+                const result = await supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .eq('is_starred', true)
+                    .is('deleted_at', null)
+                    .order('created_at', { ascending: false });
+
+                messagesData = result.data;
+                messagesError = result.error;
+            } else {
+                // Fetch messages for specific conversation
+                const result = await supabase
+                    .from('chat_messages')
+                    .select('*')
+                    .eq('conversation_id', conversationId)
+                    .is('deleted_at', null)
+                    .order('created_at', { ascending: true });
+
+                messagesData = result.data;
+                messagesError = result.error;
+            }
 
             if (messagesError) throw messagesError;
 
@@ -218,6 +242,27 @@ export function Chat() {
             toast.error('Erreur lors de l\'envoi du message');
         } finally {
             setSending(false);
+        }
+    };
+
+    const toggleStarMessage = async (messageId: string, currentStarred: boolean) => {
+        try {
+            const { error } = await supabase
+                .from('chat_messages')
+                .update({ is_starred: !currentStarred })
+                .eq('id', messageId);
+
+            if (error) throw error;
+
+            // Update local state
+            setMessages(messages.map(msg =>
+                msg.id === messageId ? { ...msg, is_starred: !currentStarred } : msg
+            ));
+
+            toast.success(!currentStarred ? '⭐ Message ajouté aux importants' : 'Message retiré des importants');
+        } catch (error: any) {
+            console.error('[Chat] Error toggling star:', error);
+            toast.error('Erreur lors de la modification');
         }
     };
 
@@ -377,7 +422,7 @@ export function Chat() {
                                     return (
                                         <div
                                             key={msg.id}
-                                            className={`flex gap-3 mb-4 ${isOwn ? 'flex-row-reverse' : ''}`}
+                                            className={`flex gap-3 mb-4 group ${isOwn ? 'flex-row-reverse' : ''}`}
                                         >
                                             <Avatar
                                                 fallback={msg.sender?.display_name?.[0] || msg.sender?.email?.[0] || 'U'}
@@ -391,6 +436,16 @@ export function Chat() {
                                                     <span className="text-xs text-text-subtle">
                                                         {formatTime(msg.created_at)}
                                                     </span>
+                                                    <button
+                                                        onClick={() => toggleStarMessage(msg.id, msg.is_starred || false)}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity hover:scale-110"
+                                                        title={msg.is_starred ? 'Retirer des importants' : 'Ajouter aux importants'}
+                                                    >
+                                                        <Star
+                                                            size={14}
+                                                            className={msg.is_starred ? 'fill-yellow-500 text-yellow-500' : 'text-gray-400 hover:text-yellow-500'}
+                                                        />
+                                                    </button>
                                                 </div>
                                                 <div
                                                     className={`px-4 py-2 rounded-2xl ${isOwn
