@@ -117,25 +117,38 @@ export function Chat() {
 
     const fetchMessages = async (conversationId: string) => {
         try {
-            const { data, error } = await supabase
+            console.log('[Chat] 🔍 Fetching messages for conversation:', conversationId);
+
+            // Fetch messages without the FK relation syntax
+            const { data: messagesData, error: messagesError } = await supabase
                 .from('chat_messages')
-                .select(`
-                    *,
-                    sender:profiles!sender_id (
-                        id,
-                        display_name,
-                        email,
-                        avatar_url
-                    )
-                `)
+                .select('*')
                 .eq('conversation_id', conversationId)
                 .is('deleted_at', null)
                 .order('created_at', { ascending: true });
 
-            if (error) throw error;
-            setMessages(data || []);
+            if (messagesError) throw messagesError;
+
+            console.log('[Chat] 📦 Raw messages from DB:', messagesData?.length || 0, messagesData);
+
+            // Manually fetch sender profiles for each message
+            const messagesWithSenders = await Promise.all(
+                (messagesData || []).map(async (msg: any) => {
+                    const { data: sender } = await supabase
+                        .from('profiles')
+                        .select('id, display_name, email, avatar_url')
+                        .eq('id', msg.sender_id)
+                        .single();
+
+                    console.log('[Chat] 👤 Fetched sender for message:', msg.id, sender);
+                    return { ...msg, sender: sender || undefined } as Message;
+                })
+            );
+
+            console.log('[Chat] ✅ Final messages with senders:', messagesWithSenders.length, messagesWithSenders);
+            setMessages(messagesWithSenders);
         } catch (error: any) {
-            console.error('[Chat] Error fetching messages:', error);
+            console.error('[Chat] ❌ Error fetching messages:', error);
         }
     };
 

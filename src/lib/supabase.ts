@@ -1,8 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import type { Database } from '../types/supabase';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+console.log('🔍 [Supabase Config] URL from env:', supabaseUrl);
+console.log('🔍 [Supabase Config] Key from env:', supabaseAnonKey?.substring(0, 20) + '...');
 
 if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
@@ -10,10 +12,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
     );
 }
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Create Supabase client without strict typing to avoid schema conflicts
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
         persistSession: true,
         autoRefreshToken: true,
     },
 });
-;
+
