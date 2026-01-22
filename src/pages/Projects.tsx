@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { LayoutGrid, List, Plus, Clock, MoreHorizontal, Flame, Search, Eye, Pencil, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import { Card, CardContent } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
@@ -66,6 +68,7 @@ const projects = [
 ];
 
 export function Projects() {
+    const { user } = useAuth();
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [searchQuery, setSearchQuery] = useState('');
     const [filterStatus, setFilterStatus] = useState('all');
@@ -73,6 +76,15 @@ export function Projects() {
 
     // Modal State
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+    // Form State
+    const [projectForm, setProjectForm] = useState({
+        name: '',
+        client: '',
+        deadline: '',
+        priority: 'medium',
+        description: ''
+    });
 
     const filteredProjects = useMemo(() => {
         return projects.filter(project => {
@@ -86,11 +98,59 @@ export function Projects() {
         });
     }, [searchQuery, filterStatus, filterPriority]);
 
-    const handleCreateProject = (e: React.FormEvent) => {
+    const handleCreateProject = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Here you would typically handle form submission logic
-        toast.success("Projet créé avec succès !");
-        setIsCreateModalOpen(false);
+
+        if (!projectForm.name || !projectForm.client) {
+            toast.error('Veuillez remplir tous les champs obligatoires');
+            return;
+        }
+
+        try {
+            // Create calendar event if deadline is provided
+            if (projectForm.deadline && user) {
+                const deadlineDate = new Date(projectForm.deadline);
+                // Set to end of day for all-day event
+                deadlineDate.setHours(23, 59, 59, 999);
+
+                const startDate = new Date(projectForm.deadline);
+                startDate.setHours(0, 0, 0, 0);
+
+                const { error: calendarError } = await supabase
+                    .from('calendar_events')
+                    .insert({
+                        title: `📋 Deadline: ${projectForm.name}`,
+                        description: `Projet: ${projectForm.name}\nClient: ${projectForm.client}\n\n${projectForm.description || 'Pas de description'}`,
+                        category: 'task',
+                        start_at: startDate.toISOString(),
+                        end_at: deadlineDate.toISOString(),
+                        all_day: true,
+                        created_by: user.id
+                    });
+
+                if (calendarError) {
+                    console.error('Error creating calendar event:', calendarError);
+                    toast.error('Projet créé mais erreur lors de l\'ajout au calendrier');
+                } else {
+                    toast.success('Projet créé et ajouté au calendrier ! 📅');
+                }
+            } else {
+                toast.success('Projet créé avec succès !');
+            }
+
+            // Reset form and close modal
+            setProjectForm({
+                name: '',
+                client: '',
+                deadline: '',
+                priority: 'medium',
+                description: ''
+            });
+            setIsCreateModalOpen(false);
+        } catch (error: any) {
+            console.error('Error creating project:', error);
+            toast.error('Erreur lors de la création du projet');
+        }
     };
 
     return (
@@ -421,18 +481,36 @@ export function Projects() {
                 }
             >
                 <div className="space-y-4">
-                    <Input label="Nom du projet" placeholder="Ex: Refonte Site Web" />
-                    <Input label="Client" placeholder="Ex: Acme Corp" />
+                    <Input
+                        label="Nom du projet"
+                        placeholder="Ex: Refonte Site Web"
+                        value={projectForm.name}
+                        onChange={(e) => setProjectForm({ ...projectForm, name: e.target.value })}
+                        required
+                    />
+                    <Input
+                        label="Client"
+                        placeholder="Ex: Acme Corp"
+                        value={projectForm.client}
+                        onChange={(e) => setProjectForm({ ...projectForm, client: e.target.value })}
+                        required
+                    />
                     <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-400">Date limite</label>
-                            <Input type="date" />
+                            <label className="text-sm font-medium text-gray-400">
+                                Date limite <span className="text-xs text-text-subtle">(optionnel - sera ajouté au calendrier)</span>
+                            </label>
+                            <Input
+                                type="date"
+                                value={projectForm.deadline}
+                                onChange={(e) => setProjectForm({ ...projectForm, deadline: e.target.value })}
+                            />
                         </div>
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-400">Priorité</label>
                             <Select
-                                value="medium"
-                                onChange={() => { }}
+                                value={projectForm.priority}
+                                onChange={(value) => setProjectForm({ ...projectForm, priority: value })}
                                 options={[
                                     { value: 'high', label: 'Haute' },
                                     { value: 'medium', label: 'Moyenne' },
@@ -446,6 +524,8 @@ export function Projects() {
                         <textarea
                             className="w-full h-24 bg-[#1A1A1A] border border-gray-800 rounded-lg p-3 text-white placeholder-gray-600 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 resize-none transition-all"
                             placeholder="Description du projet..."
+                            value={projectForm.description}
+                            onChange={(e) => setProjectForm({ ...projectForm, description: e.target.value })}
                         />
                     </div>
                 </div>
