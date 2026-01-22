@@ -2,8 +2,22 @@ import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, FolderKanban, Users, Settings, Briefcase, Bell, Inbox, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { useAuth } from '../../contexts/AuthContext';
 
 export const Sidebar: React.FC = () => {
+    const { user } = useAuth();
+
+    // Get user's display name from metadata or email
+    const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User';
+
+    // Get initials for avatar
+    const initials = displayName
+        .split(' ')
+        .map(n => n[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2);
+
     return (
         <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-border bg-surface p-6 text-text-main">
             <div className="mb-10">
@@ -35,11 +49,11 @@ export const Sidebar: React.FC = () => {
             <div className="mt-auto border-t border-border pt-4">
                 <div className="flex items-center gap-3">
                     <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-sm font-bold text-white">
-                        AL
+                        {initials}
                     </div>
                     <div className="flex flex-col">
-                        <span className="text-sm font-semibold text-white">Antoine Lewis</span>
-                        <span className="text-[11px] text-text-muted">Founder</span>
+                        <span className="text-sm font-semibold text-white">{displayName}</span>
+                        <span className="text-[11px] text-text-muted">Co-founder</span>
                     </div>
                 </div>
             </div>
