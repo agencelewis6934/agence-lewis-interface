@@ -23,7 +23,8 @@ export const Header: React.FC = () => {
                         />
                     </div>
                 ) : (
-                    <div /> {/* Empty div to maintain layout */}
+                    // Empty div to maintain layout
+                    <div />
                 )}
 
                 <div className="flex items-center gap-4">
