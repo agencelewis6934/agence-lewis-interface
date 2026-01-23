@@ -79,7 +79,7 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
         setLoading(true);
 
         try {
-            const eventData = {
+            const eventData: any = {
                 title: formData.title.trim(),
                 description: formData.description?.trim() || null,
                 location: formData.location?.trim() || null,
@@ -88,8 +88,12 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
                 start_at: formData.start_at.toISOString(),
                 end_at: formData.end_at.toISOString(),
                 all_day: formData.all_day,
-                created_by: user.id,
             };
+
+            // Only add created_by if user exists (for compatibility with mock auth)
+            if (user?.id) {
+                eventData.created_by = user.id;
+            }
 
             console.log('[EventModal] Submitting event data:', eventData);
 
