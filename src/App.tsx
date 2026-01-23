@@ -12,6 +12,7 @@ import { Inbox } from './pages/Inbox';
 import { Notifications } from './pages/Notifications';
 import { Chat } from './pages/Chat';
 import { Calendar } from './pages/Calendar';
+import { Documents } from './pages/Documents';
 import { Login } from './pages/Login';
 import { Signup } from './pages/Signup';
 
@@ -44,6 +45,7 @@ function App() {
             <Route path="/inbox" element={<Inbox />} />
             <Route path="/chat" element={<Chat />} />
             <Route path="/calendar" element={<Calendar />} />
+            <Route path="/documents" element={<Documents />} />
             <Route path="/notifications" element={<Notifications />} />
           </Route>
 
