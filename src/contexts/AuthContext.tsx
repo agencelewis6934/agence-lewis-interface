@@ -14,79 +14,28 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    // Initialize from localStorage
-    const [session, setSession] = useState<Session | null>(() => {
-        const saved = localStorage.getItem('auth_session');
-        console.log('[Auth] Initializing session from localStorage:', saved ? 'FOUND' : 'NOT FOUND');
-        return saved ? JSON.parse(saved) : null;
-    });
-
-    const [user, setUser] = useState<User | null>(() => {
-        const saved = localStorage.getItem('auth_user');
-        console.log('[Auth] Initializing user from localStorage:', saved ? 'FOUND' : 'NOT FOUND');
-        return saved ? JSON.parse(saved) : null;
-    });
-
-    // Start with loading=false if we have a session in localStorage
-    const [loading, setLoading] = useState(() => {
-        const hasSession = !!localStorage.getItem('auth_session');
-        console.log('[Auth] Has session in localStorage:', hasSession);
-        console.log('[Auth] Setting initial loading to:', !hasSession);
-        return !hasSession;
-    });
-
-    // Sync session to localStorage whenever it changes
-    useEffect(() => {
-        if (session) {
-            console.log('[Auth] Saving session to localStorage');
-            localStorage.setItem('auth_session', JSON.stringify(session));
-        } else {
-            console.log('[Auth] Removing session from localStorage');
-            localStorage.removeItem('auth_session');
-        }
-    }, [session]);
-
-    // Sync user to localStorage whenever it changes
-    useEffect(() => {
-        if (user) {
-            console.log('[Auth] Saving user to localStorage');
-            localStorage.setItem('auth_user', JSON.stringify(user));
-        } else {
-            console.log('[Auth] Removing user from localStorage');
-            localStorage.removeItem('auth_user');
-        }
-    }, [user]);
+    const [session, setSession] = useState<Session | null>(null);
+    const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        // Only check Supabase session if we don't already have a bypass session in localStorage
-        const hasLocalSession = !!localStorage.getItem('auth_session');
+        console.log('[Auth] Checking Supabase session...');
 
-        if (!hasLocalSession) {
-            console.log('[Auth] No local session, checking Supabase...');
-            // Check active session from Supabase
-            supabase.auth.getSession().then(({ data: { session } }) => {
-                if (session) {
-                    console.log('[Auth] Found Supabase session');
-                    setSession(session);
-                    setUser(session?.user ?? null);
-                }
-                setLoading(false);
-            });
-        } else {
-            console.log('[Auth] Using local bypass session, skipping Supabase check');
-            setLoading(false);
-        }
-
-        // Listen for auth changes (but don't overwrite bypass sessions)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-            const hasLocalSession = !!localStorage.getItem('auth_session');
-            if (!hasLocalSession) {
-                console.log('[Auth] Auth state changed, updating session');
+        // Check active session from Supabase
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                console.log('[Auth] Found Supabase session');
                 setSession(session);
                 setUser(session?.user ?? null);
-            } else {
-                console.log('[Auth] Auth state changed but preserving local bypass session');
             }
+            setLoading(false);
+        });
+
+        // Listen for auth changes
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+            console.log('[Auth] Auth state changed, updating session');
+            setSession(session);
+            setUser(session?.user ?? null);
             setLoading(false);
         });
 
@@ -94,57 +43,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        // Define allowed users
-        const allowedUsers = [
-            {
-                email: 'a.payet@agence-lewis.fr',
-                password: 'Admin123@!',
-                id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
-                full_name: 'Angel'
-            },
-            {
-                email: 'a.pivetti@agence-lewis.fr',
-                password: 'Admin123@!',
-                id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
-                full_name: 'Antoine'
-            }
-        ];
-
-        // Check if credentials match any allowed user
-        const matchedUser = allowedUsers.find(
-            u => u.email === email && u.password === password
-        );
-
-        if (matchedUser) {
-            console.log(`[Auth] Bypass login for ${matchedUser.full_name}`);
-
-            const mockUser = {
-                id: matchedUser.id,
-                email: matchedUser.email,
-                user_metadata: { full_name: matchedUser.full_name },
-                app_metadata: {},
-                aud: 'authenticated',
-                created_at: new Date().toISOString()
-            } as any;
-
-            const mockSession = {
-                access_token: 'mock-token',
-                token_type: 'bearer',
-                expires_in: 3600,
-                refresh_token: 'mock-refresh-token',
-                user: mockUser
-            } as any;
-
-            setSession(mockSession);
-            setUser(mockUser);
-            return { error: null };
-        }
-
-        // If not a bypass user, try real Supabase auth (will likely fail)
-        const { error } = await supabase.auth.signInWithPassword({
+        // Use real Supabase authentication
+        const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
         });
+
+        if (!error && data.session) {
+            setSession(data.session);
+            setUser(data.user);
+        }
+
         return { error };
     };
 
