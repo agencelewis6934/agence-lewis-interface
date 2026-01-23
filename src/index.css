@@ -59,3 +59,16 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-border-highlight);
 }
+
+/* PDF Thumbnail Styles */
+.pdf-thumbnail canvas {
+  max-width: 100%;
+  height: auto !important;
+  object-fit: contain;
+}
+
+.pdf-thumbnail .react-pdf__Page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

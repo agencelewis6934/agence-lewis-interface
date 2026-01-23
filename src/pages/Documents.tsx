@@ -3,6 +3,7 @@ import { Upload, Grid, List, Search, Download, Trash2, Eye, FileText, Image as I
 import { toast } from 'sonner';
 import { useAuth } from '../contexts/AuthContext';
 import { DocumentUploadModal } from '../components/documents/DocumentUploadModal';
+import { PDFThumbnail } from '../components/documents/PDFThumbnail';
 import { getDocuments, deleteDocument, downloadDocument, formatFileSize, getDocumentUrl } from '../lib/documents';
 import type { Document, DocumentViewMode } from '../types/documents';
 
@@ -100,6 +101,8 @@ export function Documents() {
                             alt={doc.name}
                             className="w-full h-full object-cover"
                         />
+                    ) : isPDF ? (
+                        <PDFThumbnail url={url} className="w-full h-full" />
                     ) : (
                         <div className="flex flex-col items-center gap-2">
                             {getFileIconComponent(doc.file_type)}
@@ -209,8 +212,8 @@ export function Documents() {
                     <button
                         onClick={() => setViewMode('grid')}
                         className={`p-2 rounded transition-colors ${viewMode === 'grid'
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         <Grid className="w-5 h-5" />
@@ -218,8 +221,8 @@ export function Documents() {
                     <button
                         onClick={() => setViewMode('list')}
                         className={`p-2 rounded transition-colors ${viewMode === 'list'
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-400 hover:text-white'
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-400 hover:text-white'
                             }`}
                     >
                         <List className="w-5 h-5" />
