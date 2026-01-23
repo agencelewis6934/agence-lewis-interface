@@ -43,7 +43,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }, []);
 
     const signIn = async (email: string, password: string) => {
-        // Use real Supabase authentication
+        // Bypass authentication for specific users
+        const allowedUsers = [
+            {
+                email: 'a.payet@agence-lewis.fr',
+                password: 'Admin123@!',
+                id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+                full_name: 'Angel'
+            },
+            {
+                email: 'a.pivetti@agence-lewis.fr',
+                password: 'Admin123@!',
+                id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+                full_name: 'Antoine'
+            }
+        ];
+
+        const matchedUser = allowedUsers.find(
+            u => u.email === email && u.password === password
+        );
+
+        if (matchedUser) {
+            console.log(`[Auth] Bypass login for ${matchedUser.full_name}`);
+
+            const mockUser = {
+                id: matchedUser.id,
+                email: matchedUser.email,
+                user_metadata: { full_name: matchedUser.full_name },
+                app_metadata: {},
+                aud: 'authenticated',
+                created_at: new Date().toISOString()
+            } as any;
+
+            const mockSession = {
+                access_token: 'mock-token',
+                token_type: 'bearer',
+                expires_in: 3600,
+                refresh_token: 'mock-refresh-token',
+                user: mockUser
+            } as any;
+
+            setSession(mockSession);
+            setUser(mockUser);
+            return { error: null };
+        }
+
+        // Try real Supabase auth for other users
         const { data, error } = await supabase.auth.signInWithPassword({
             email,
             password
