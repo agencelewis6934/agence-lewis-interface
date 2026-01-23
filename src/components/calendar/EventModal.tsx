@@ -70,6 +70,12 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
             return;
         }
 
+        if (!user) {
+            console.error('[EventModal] User not authenticated');
+            toast.error('Vous devez être connecté pour créer un événement');
+            return;
+        }
+
         setLoading(true);
 
         try {
@@ -82,32 +88,50 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
                 start_at: formData.start_at.toISOString(),
                 end_at: formData.end_at.toISOString(),
                 all_day: formData.all_day,
-                created_by: user?.id,
+                created_by: user.id,
             };
+
+            console.log('[EventModal] Submitting event data:', eventData);
 
             if (event) {
                 // Update existing event
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('calendar_events')
                     .update(eventData)
-                    .eq('id', event.id);
+                    .eq('id', event.id)
+                    .select();
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[EventModal] Update error:', error);
+                    throw error;
+                }
+                console.log('[EventModal] Event updated:', data);
                 toast.success('Événement modifié');
             } else {
                 // Create new event
-                const { error } = await supabase
+                const { data, error } = await supabase
                     .from('calendar_events')
-                    .insert(eventData);
+                    .insert(eventData)
+                    .select();
 
-                if (error) throw error;
+                if (error) {
+                    console.error('[EventModal] Insert error:', error);
+                    throw error;
+                }
+                console.log('[EventModal] Event created:', data);
                 toast.success('Événement créé');
             }
 
             onSave();
         } catch (error: any) {
             console.error('[EventModal] Error saving event:', error);
-            toast.error('Erreur lors de l\'enregistrement');
+            console.error('[EventModal] Error details:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
+            toast.error(`Erreur: ${error.message || 'Erreur lors de l\'enregistrement'}`);
         } finally {
             setLoading(false);
         }
