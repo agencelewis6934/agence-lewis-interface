@@ -230,7 +230,7 @@ export function Projects() {
                     <div>
                         <h2 className="text-5xl font-bold tracking-tight mb-2">
                             <span className="bg-gradient-to-r from-white via-white to-gray-400 bg-clip-text text-transparent">
-                                Projets & Tâches
+                                Projets
                             </span>
                         </h2>
                         <p className="text-text-muted text-lg">

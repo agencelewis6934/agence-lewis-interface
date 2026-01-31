@@ -5,6 +5,7 @@ import { DashboardLayout } from './components/layout/DashboardLayout';
 import { Dashboard } from './pages/Dashboard';
 import { Clients } from './pages/Clients';
 import { Projects } from './pages/Projects';
+import { Tasks } from './pages/Tasks';
 import { Finances } from './pages/Finances';
 import { Team } from './pages/Team';
 import { Settings } from './pages/Settings';
@@ -38,6 +39,7 @@ function App() {
           >
             <Route path="/" element={<Dashboard />} />
             <Route path="/projects" element={<Projects />} />
+            <Route path="/tasks" element={<Tasks />} />
             <Route path="/clients" element={<Clients />} />
             <Route path="/finances" element={<Finances />} />
             <Route path="/team" element={<Team />} />
