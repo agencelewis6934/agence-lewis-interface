@@ -1,5 +1,5 @@
 :root {
-    /* Brand Colors - Pastel Palette */
+    /* Brand Colors - Pastel Palette (KEPT) */
     --color-primary: #E0528B;
     /* Rose vif - Boutons, liens, accents */
     --color-primary-hover: #C74477;
@@ -12,32 +12,32 @@
     --color-secondary-hover: #A67B96;
     /* Mauve foncé pour hover */
 
-    /* Neutrals - Light Theme */
-    --color-background: #EFF2EF;
-    /* Crème - Fond principal */
-    --color-surface: #FFFFFF;
-    /* Blanc - Cartes, surfaces */
-    --color-surface-hover: #F8F9F8;
-    /* Blanc cassé pour hover */
-    --color-surface-alt: #BCB2BD;
-    /* Lavande - Surfaces alternatives */
+    /* Neutrals - Dark Theme with Pastel Accents */
+    --color-background: #0a0a0a;
+    /* Presque noir - Fond principal */
+    --color-surface: #1a1a1a;
+    /* Gris très foncé - Cartes, surfaces */
+    --color-surface-hover: #242424;
+    /* Gris foncé pour hover */
+    --color-surface-alt: #2a2530;
+    /* Lavande très foncé - Surfaces alternatives */
 
-    --color-border: #C2C2C2;
-    /* Gris - Bordures principales */
-    --color-border-subtle: #D8D8D8;
-    /* Gris clair - Bordures subtiles */
+    --color-border: #333333;
+    /* Gris moyen - Bordures principales */
+    --color-border-subtle: #262626;
+    /* Gris très foncé - Bordures subtiles */
     --color-border-highlight: #BB8BA6;
-    /* Mauve - Bordures en focus */
+    /* Mauve - Bordures en focus (PASTEL KEPT) */
 
-    /* Text Colors - Adjusted for light theme */
-    --color-text-main: #2A2530;
-    /* Presque noir pour texte principal */
-    --color-text-muted: #6B6570;
-    /* Gris moyen pour texte secondaire */
-    --color-text-subtle: #9B95A0;
-    /* Gris clair pour texte tertiaire */
-    --color-text-inverse: #FFFFFF;
-    /* Blanc pour texte sur fond foncé */
+    /* Text Colors - Light text on dark background */
+    --color-text-main: #FFFFFF;
+    /* Blanc pour texte principal */
+    --color-text-muted: #A0A0A0;
+    /* Gris clair pour texte secondaire */
+    --color-text-subtle: #707070;
+    /* Gris moyen pour texte tertiaire */
+    --color-text-inverse: #0a0a0a;
+    /* Noir pour texte sur fond clair */
 
     /* Spacing */
     --spacing-sm: 0.5rem;
@@ -52,8 +52,8 @@
     /* 16px for cards */
     --radius-full: 9999px;
 
-    /* Shadows - Soft shadows for light theme */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    /* Shadows - Subtle shadows for dark theme */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
