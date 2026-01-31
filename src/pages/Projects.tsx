@@ -1,14 +1,27 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Filter, LayoutGrid, List, ChevronDown, Sparkles } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { Card, CardContent, CardHeader } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateProjectModal } from '../components/projects/CreateProjectModal';
+import {
+    DndContext,
+    DragOverlay,
+    useSensor,
+    useSensors,
+    PointerSensor,
+    closestCenter,
+    type DragStartEvent,
+    type DragEndEvent,
+} from '@dnd-kit/core';
+import { useDroppable } from '@dnd-kit/core';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 
 const columns = [
     { id: 'todo', title: 'À Faire', color: 'from-gray-500 to-gray-600' },
@@ -16,6 +29,73 @@ const columns = [
     { id: 'review', title: 'En Révision', color: 'from-amber-500 to-orange-600' },
     { id: 'done', title: 'Terminé', color: 'from-emerald-500 to-teal-600' },
 ];
+
+// Draggable Project Card Component
+function DraggableProjectCard({ project }: { project: any }) {
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+        id: project.id,
+        data: { project },
+    });
+
+    const style = {
+        transform: CSS.Translate.toString(transform),
+        opacity: isDragging ? 0.5 : 1,
+        cursor: isDragging ? 'grabbing' : 'grab',
+    };
+
+    return (
+        <motion.div
+            ref={setNodeRef}
+            style={style}
+            {...listeners}
+            {...attributes}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: isDragging ? 0.5 : 1, scale: 1 }}
+            className="p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing"
+        >
+            <h4 className="font-semibold text-white mb-2">{project.name}</h4>
+            {project.clients && (
+                <p className="text-xs text-text-muted">
+                    {project.clients.name}
+                    {project.clients.company && ` - ${project.clients.company}`}
+                </p>
+            )}
+            {project.price && (
+                <p className="text-sm font-bold text-primary mt-2">
+                    {project.price} €
+                </p>
+            )}
+            {project.priority && (
+                <Badge
+                    variant={
+                        project.priority === 'high' ? 'destructive' :
+                            project.priority === 'medium' ? 'warning' : 'neutral'
+                    }
+                    className="mt-2"
+                >
+                    {project.priority === 'high' ? 'Haute' :
+                        project.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                </Badge>
+            )}
+        </motion.div>
+    );
+}
+
+// Droppable Column Component
+function DroppableColumn({ column, children }: { column: any; children: React.ReactNode }) {
+    const { setNodeRef, isOver } = useDroppable({
+        id: column.id,
+    });
+
+    return (
+        <div
+            ref={setNodeRef}
+            className={`transition-all ${isOver ? 'ring-2 ring-primary ring-opacity-50' : ''}`}
+        >
+            {children}
+        </div>
+    );
+}
 
 export function Projects() {
     const [projects, setProjects] = useState<any[]>([]);
@@ -25,6 +105,16 @@ export function Projects() {
     const [filterStatus, setFilterStatus] = useState('all');
     const [filterPriority, setFilterPriority] = useState('all');
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    // Configure drag sensors
+    const sensors = useSensors(
+        useSensor(PointerSensor, {
+            activationConstraint: {
+                distance: 8, // 8px movement required to start drag
+            },
+        })
+    );
 
     // Load projects from Supabase
     useEffect(() => {
@@ -57,10 +147,69 @@ export function Projects() {
         }
     };
 
+    // Update project status in Supabase
+    const updateProjectStatus = async (projectId: string, newStatus: string) => {
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .update({ status: newStatus, updated_at: new Date().toISOString() })
+                .eq('id', projectId);
+
+            if (error) throw error;
+
+            // Update local state
+            setProjects(prevProjects =>
+                prevProjects.map(p =>
+                    p.id === projectId ? { ...p, status: newStatus } : p
+                )
+            );
+
+            toast.success('Projet déplacé avec succès');
+            return true;
+        } catch (error) {
+            console.error('Error updating project:', error);
+            toast.error('Erreur lors de la mise à jour du projet');
+            return false;
+        }
+    };
+
+    // Drag handlers
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
+    const handleDragEnd = async (event: DragEndEvent) => {
+        const { active, over } = event;
+
+        if (!over) {
+            setActiveId(null);
+            return;
+        }
+
+        const projectId = active.id as string;
+        const newStatus = over.id as string;
+
+        // Find the project being dragged
+        const project = projects.find(p => p.id === projectId);
+
+        if (project && project.status !== newStatus) {
+            await updateProjectStatus(projectId, newStatus);
+        }
+
+        setActiveId(null);
+    };
+
+    const handleDragCancel = () => {
+        setActiveId(null);
+    };
+
     // Calculate column counts
     const getColumnProjects = (columnId: string) => {
         return projects.filter(p => p.status === columnId);
     };
+
+    // Get active project for drag overlay
+    const activeProject = activeId ? projects.find(p => p.id === activeId) : null;
 
     return (
         <div className="space-y-8 pb-12">
@@ -148,80 +297,80 @@ export function Projects() {
 
             {/* Kanban Board */}
             {viewMode === 'kanban' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    {columns.map((column, idx) => {
-                        const columnProjects = getColumnProjects(column.id);
-                        return (
-                            <motion.div
-                                key={column.id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.1 }}
-                            >
-                                <Card className="h-full">
-                                    <CardHeader className="pb-3">
-                                        <div className="flex items-center justify-between">
-                                            <div className={`h-2 w-full rounded-full bg-gradient-to-r ${column.color} shadow-lg`} />
-                                        </div>
-                                        <div className="mt-3">
-                                            <div className="flex items-center justify-between">
-                                                <h3 className={`text-sm font-black bg-gradient-to-r ${column.color} bg-clip-text text-transparent ring-1 ring-inset`}>
-                                                    {column.title}
-                                                </h3>
-                                                <Badge variant="neutral" className="text-xs">
-                                                    {columnProjects.length}
-                                                </Badge>
-                                            </div>
-                                        </div>
-                                    </CardHeader>
-                                    <CardContent>
-                                        {columnProjects.length === 0 ? (
-                                            <div className="text-center py-8 text-text-muted text-sm">
-                                                Aucun projet
-                                            </div>
-                                        ) : (
-                                            <div className="space-y-3">
-                                                {columnProjects.map((project) => (
-                                                    <motion.div
-                                                        key={project.id}
-                                                        initial={{ opacity: 0, scale: 0.95 }}
-                                                        animate={{ opacity: 1, scale: 1 }}
-                                                        className="p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-pointer"
-                                                    >
-                                                        <h4 className="font-semibold text-white mb-2">{project.name}</h4>
-                                                        {project.clients && (
-                                                            <p className="text-xs text-text-muted">
-                                                                {project.clients.name}
-                                                                {project.clients.company && ` - ${project.clients.company}`}
-                                                            </p>
-                                                        )}
-                                                        {project.price && (
-                                                            <p className="text-sm font-bold text-primary mt-2">
-                                                                {project.price} €
-                                                            </p>
-                                                        )}
-                                                        {project.priority && (
-                                                            <Badge
-                                                                variant={
-                                                                    project.priority === 'high' ? 'destructive' :
-                                                                        project.priority === 'medium' ? 'warning' : 'neutral'
-                                                                }
-                                                                className="mt-2"
-                                                            >
-                                                                {project.priority === 'high' ? 'Haute' :
-                                                                    project.priority === 'medium' ? 'Moyenne' : 'Basse'}
-                                                            </Badge>
-                                                        )}
-                                                    </motion.div>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </CardContent>
-                                </Card>
-                            </motion.div>
-                        );
-                    })}
-                </div>
+                <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragStart={handleDragStart}
+                    onDragEnd={handleDragEnd}
+                    onDragCancel={handleDragCancel}
+                >
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        {columns.map((column, idx) => {
+                            const columnProjects = getColumnProjects(column.id);
+                            return (
+                                <motion.div
+                                    key={column.id}
+                                    initial={{ opacity: 0, y: 20 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.1 }}
+                                >
+                                    <DroppableColumn column={column}>
+                                        <Card className="h-full">
+                                            <CardHeader className="pb-3">
+                                                <div className="flex items-center justify-between">
+                                                    <div className={`h-2 w-full rounded-full bg-gradient-to-r ${column.color} shadow-lg`} />
+                                                </div>
+                                                <div className="mt-3">
+                                                    <div className="flex items-center justify-between">
+                                                        <h3 className={`text-sm font-black bg-gradient-to-r ${column.color} bg-clip-text text-transparent ring-1 ring-inset`}>
+                                                            {column.title}
+                                                        </h3>
+                                                        <Badge variant="neutral" className="text-xs">
+                                                            {columnProjects.length}
+                                                        </Badge>
+                                                    </div>
+                                                </div>
+                                            </CardHeader>
+                                            <CardContent>
+                                                {columnProjects.length === 0 ? (
+                                                    <div className="text-center py-8 text-text-muted text-sm">
+                                                        Aucun projet
+                                                    </div>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        {columnProjects.map((project) => (
+                                                            <DraggableProjectCard key={project.id} project={project} />
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </CardContent>
+                                        </Card>
+                                    </DroppableColumn>
+                                </motion.div>
+                            );
+                        })}
+                    </div>
+
+                    {/* Drag Overlay */}
+                    <DragOverlay>
+                        {activeProject ? (
+                            <div className="p-4 bg-surface-elevated rounded-xl border border-primary shadow-2xl opacity-90">
+                                <h4 className="font-semibold text-white mb-2">{activeProject.name}</h4>
+                                {activeProject.clients && (
+                                    <p className="text-xs text-text-muted">
+                                        {activeProject.clients.name}
+                                        {activeProject.clients.company && ` - ${activeProject.clients.company}`}
+                                    </p>
+                                )}
+                                {activeProject.price && (
+                                    <p className="text-sm font-bold text-primary mt-2">
+                                        {activeProject.price} €
+                                    </p>
+                                )}
+                            </div>
+                        ) : null}
+                    </DragOverlay>
+                </DndContext>
             )}
 
             {/* Loading State */}
