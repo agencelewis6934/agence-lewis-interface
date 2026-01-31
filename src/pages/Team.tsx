@@ -11,52 +11,19 @@ import { Select } from '../components/ui/Select';
 import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const team = [
-    {
-        id: 1,
-        name: 'Antoine Pivodan',
-        role: 'Fondateur / Designer',
-        workload: 85,
-        status: 'Available',
-        avatar: 'AP',
-        skills: ['Design UI/UX', 'Framer', 'Strategy'],
-        performance: 98,
-        projects: 4
-    },
-    {
-        id: 2,
-        name: 'Ilies Bennani',
-        role: 'Full-stack Developer',
-        workload: 100,
-        status: 'Busy',
-        avatar: 'IB',
-        skills: ['React', 'Node.js', 'Supabase'],
-        performance: 95,
-        projects: 6
-    },
-    {
-        id: 3,
-        name: 'Sophie Martin',
-        role: 'Chef de Projet',
-        workload: 60,
-        status: 'Available',
-        avatar: 'SM',
-        skills: ['Agile', 'Communication', 'Planning'],
-        performance: 92,
-        projects: 2
-    },
-    {
-        id: 4,
-        name: 'Lucas Dubois',
-        role: 'Motion Designer',
-        workload: 40,
-        status: 'Available',
-        avatar: 'LD',
-        skills: ['After Effects', 'Cinema 4D', 'Animation'],
-        performance: 88,
-        projects: 3
-    }
-];
+interface TeamMember {
+    id: number;
+    name: string;
+    role: string;
+    workload: number;
+    status: string;
+    avatar: string;
+    skills: string[];
+    performance: number;
+    projects: number;
+}
+
+const team: TeamMember[] = [];
 
 export function Team() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -365,10 +332,14 @@ export function Team() {
             {filteredTeam.length === 0 && (
                 <div className="h-60 rounded-3xl border-2 border-dashed border-border-subtle flex flex-col items-center justify-center gap-4 text-text-subtle">
                     <Search className="h-10 w-10 opacity-20" />
-                    <p className="text-lg font-medium">Aucun membre ne correspond à votre recherche</p>
-                    <Button variant="ghost" className="text-primary" onClick={() => { setSearchQuery(''); setFilterStatus('all'); }}>
-                        Réinitialiser les filtres
-                    </Button>
+                    <p className="text-lg font-medium">
+                        {team.length === 0 ? "Aucun membre dans l'équipe pour le moment" : "Aucun membre ne correspond à votre recherche"}
+                    </p>
+                    {team.length > 0 && (
+                        <Button variant="ghost" className="text-primary" onClick={() => { setSearchQuery(''); setFilterStatus('all'); }}>
+                            Réinitialiser les filtres
+                        </Button>
+                    )}
                 </div>
             )}
 
