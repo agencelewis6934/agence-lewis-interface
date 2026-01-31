@@ -6,7 +6,6 @@ import { KpiCard } from '../components/dashboard/KpiCard';
 import { SalesOverviewChart } from '../components/dashboard/SalesOverviewChart';
 import { CustomerTable } from '../components/dashboard/CustomerTable';
 import { ProfitTrendChart } from '../components/dashboard/ProfitTrendChart';
-import { PremiumPlanCard } from '../components/dashboard/PremiumPlanCard';
 import { ActivityFeed } from '../components/dashboard/ActivityFeed';
 import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
@@ -136,13 +135,7 @@ export const Dashboard: React.FC = () => {
                             <ProfitTrendChart data={profitTrend} />
                         </motion.div>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.9 }}
-                        >
-                            <PremiumPlanCard />
-                        </motion.div>
+
 
                         {/* Activity Sidebar Integration */}
                         <motion.div

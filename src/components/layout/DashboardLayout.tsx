@@ -1,6 +1,5 @@
 import React, { type ReactNode, useEffect } from 'react';
 import { Sidebar } from './Sidebar';
-import { Header } from './Header';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
 
@@ -56,7 +55,6 @@ export const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) =>
         <div className="flex min-h-screen bg-background text-text-main font-body">
             <Sidebar />
             <div className="ml-[280px] flex flex-1 flex-col w-[calc(100%-280px)]">
-                <Header />
                 <main className="flex-1 overflow-y-auto p-10">
                     <div className="w-full max-w-[1600px] mx-auto">
                         {children}
