@@ -4,17 +4,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { MoreHorizontal } from 'lucide-react';
 import { Button } from '../ui/Button';
 
-const data = [
-    { name: 'Branding', value: 55640, color: '#E0528B' },
-    { name: 'Web Design', value: 11420, color: '#BB8BA6' },
-    { name: 'Marketing', value: 1840, color: '#F08BB0' },
-    { name: 'Social Media', value: 2120, color: '#333333' },
-];
+interface SalesOverviewChartProps {
+    data: { name: string; value: number; color: string }[];
+}
 
-const TOTAL_VISITS = "102k";
-const SUBTITLE = "Projets Mensuels";
+export const SalesOverviewChart: React.FC<SalesOverviewChartProps> = ({ data }) => {
 
-export const SalesOverviewChart: React.FC = () => {
+    const totalValue = data.reduce((acc, curr) => acc + curr.value, 0);
+    const formattedTotal = totalValue >= 1000 ? `${(totalValue / 1000).toFixed(1)}k` : totalValue.toString();
+
     return (
         <Card className="bg-surface bg-opacity-40 backdrop-blur-xl border-border/50 h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -56,8 +54,8 @@ export const SalesOverviewChart: React.FC = () => {
 
                         {/* Center Text */}
                         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                            <span className="text-4xl font-bold text-white tracking-tight">{TOTAL_VISITS}</span>
-                            <span className="text-xs text-text-muted mt-1 uppercase tracking-wider">{SUBTITLE}</span>
+                            <span className="text-4xl font-bold text-white tracking-tight">{formattedTotal}</span>
+                            <span className="text-xs text-text-muted mt-1 uppercase tracking-wider">Budget Total</span>
                         </div>
                     </div>
 

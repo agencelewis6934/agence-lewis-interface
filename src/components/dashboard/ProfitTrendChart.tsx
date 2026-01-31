@@ -3,23 +3,20 @@ import { AreaChart, Area, Tooltip, ResponsiveContainer } from 'recharts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import { TrendingUp } from 'lucide-react';
 
-const data = [
-    { name: 'Lun', profit: 45000 },
-    { name: 'Mar', profit: 52000 },
-    { name: 'Mer', profit: 48000 },
-    { name: 'Jeu', profit: 61000 },
-    { name: 'Ven', profit: 55000 },
-    { name: 'Sam', profit: 67000 },
-    { name: 'Dim', profit: 72000 },
-];
+interface ProfitTrendChartProps {
+    data: { name: string; profit: number }[];
+}
 
-export const ProfitTrendChart: React.FC = () => {
+export const ProfitTrendChart: React.FC<ProfitTrendChartProps> = ({ data }) => {
+    const totalProfit = data.reduce((acc, curr) => acc + curr.profit, 0);
+    const formattedProfit = totalProfit.toLocaleString('en-US', { style: 'currency', currency: 'EUR' });
+
     return (
         <Card className="bg-surface bg-opacity-40 backdrop-blur-xl border-border/50 h-full">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <div className="space-y-1">
                     <CardTitle className="text-sm font-medium text-text-muted">Total Profit</CardTitle>
-                    <div className="text-2xl font-bold text-white">$136,755.77</div>
+                    <div className="text-2xl font-bold text-white">{formattedProfit}</div>
                 </div>
                 <div className="flex items-center gap-1 text-emerald-500 text-xs font-semibold bg-emerald-500/10 px-2 py-1 rounded-full">
                     <TrendingUp size={12} />

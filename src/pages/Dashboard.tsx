@@ -8,8 +8,18 @@ import { CustomerTable } from '../components/dashboard/CustomerTable';
 import { ProfitTrendChart } from '../components/dashboard/ProfitTrendChart';
 import { PremiumPlanCard } from '../components/dashboard/PremiumPlanCard';
 import { ActivityFeed } from '../components/dashboard/ActivityFeed';
+import { useDashboardMetrics } from '../hooks/useDashboardMetrics';
 
 export const Dashboard: React.FC = () => {
+    const { kpi, salesData, profitTrend, topClients, loading } = useDashboardMetrics();
+
+    if (loading) {
+        return <div className="p-8 text-center text-text-muted">Chargement du tableau de bord...</div>;
+    }
+
+    // Determine trend types based on data (mock logic or real)
+    const revenueTrendType = kpi.revenueGrowth >= 0 ? 'up' : 'down';
+
     return (
         <div className="space-y-8 pb-12">
             {/* Page Header */}
@@ -42,36 +52,36 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
                     title="Revenu Net"
-                    value="3,131,021 €"
-                    trend="+0.4%"
-                    trendType="up"
+                    value={kpi.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                    trend={kpi.revenueGrowth ? `${kpi.revenueGrowth}%` : undefined}
+                    trendType={revenueTrendType}
                     icon={<WalletIcon size={20} />}
                     subtitle="vs mois dernier"
                     delay={0.1}
                 />
                 <KpiCard
-                    title="ARR"
-                    value="1,511,121 €"
-                    trend="+32%"
+                    title="MRR"
+                    value={kpi.mrr.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                    trend="+0%"
                     trendType="up"
                     icon={<TrendingUp size={20} />}
-                    subtitle="vs trimestre dernier"
+                    subtitle="Revenu Récurrent"
                     delay={0.2}
                 />
                 <KpiCard
-                    title="Objectif Trimestriel"
-                    value="71%"
+                    title="Projets Actifs"
+                    value={kpi.activeProjects.toString()}
                     icon={<Activity size={20} />}
-                    subtitle="Cible: 5,1M€"
+                    subtitle="En cours"
                     delay={0.3}
                 />
                 <KpiCard
-                    title="Commandes"
-                    value="18,221"
-                    trend="+11%"
+                    title="Nouveaux Clients"
+                    value={kpi.newClients.toString()}
+                    trend={kpi.newClients > 0 ? "Actif" : "Aucun"}
                     trendType="up"
                     icon={<FolderGit2 size={20} />}
-                    subtitle="vs trimestre dernier"
+                    subtitle="Ce mois-ci"
                     delay={0.4}
                 />
             </div>
@@ -86,7 +96,7 @@ export const Dashboard: React.FC = () => {
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5 }}
                     >
-                        <SalesOverviewChart />
+                        <SalesOverviewChart data={salesData} />
                     </motion.div>
 
                     <motion.div
@@ -94,7 +104,7 @@ export const Dashboard: React.FC = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.6 }}
                     >
-                        <CustomerTable />
+                        <CustomerTable clients={topClients} />
                     </motion.div>
                 </div>
 
@@ -109,8 +119,8 @@ export const Dashboard: React.FC = () => {
                         >
                             <KpiCard
                                 title="Nouveaux Clients"
-                                value="862"
-                                trend="-8%"
+                                value={kpi.newClients.toString()}
+                                trend="0%"
                                 trendType="down"
                                 className="bg-primary/5 hover:bg-primary/10"
                                 delay={0}
@@ -123,7 +133,7 @@ export const Dashboard: React.FC = () => {
                             transition={{ delay: 0.8 }}
                             className="h-[280px]"
                         >
-                            <ProfitTrendChart />
+                            <ProfitTrendChart data={profitTrend} />
                         </motion.div>
 
                         <motion.div
