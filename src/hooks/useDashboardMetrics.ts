@@ -95,7 +95,7 @@ export function useDashboardMetrics() {
                 }));
 
                 if (salesChartData.length === 0) {
-                    setSalesData([{ name: 'Aucune donnée', value: 1, color: '#333' }]); // Empty state
+                    setSalesData([]); // Empty state
                 } else {
                     setSalesData(salesChartData);
                 }
