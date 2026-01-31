@@ -1,32 +1,43 @@
 :root {
-    /* Brand Colors - Standardized */
-    --color-primary: #F43F5E;
-    /* Rose-500 */
-    --color-primary-hover: #E11D48;
-    /* Rose-600 */
+    /* Brand Colors - Pastel Palette */
+    --color-primary: #E0528B;
+    /* Rose vif - Boutons, liens, accents */
+    --color-primary-hover: #C74477;
+    /* Rose foncé pour hover */
+    --color-primary-light: #F08BB0;
+    /* Rose clair pour backgrounds */
 
-    --color-secondary: #8B5CF6;
-    /* Violet-500 */
+    --color-secondary: #BB8BA6;
+    /* Mauve - Éléments secondaires */
+    --color-secondary-hover: #A67B96;
+    /* Mauve foncé pour hover */
 
-    /* Neutrals - Clean Dark Theme */
-    --color-background: #09090B;
-    /* Main background - darker than surface */
-    --color-surface: #1A1A1A;
-    /* Cards/Sidebar/Inputs - The user's preferred #1A1A1A */
-    --color-surface-hover: #27272A;
-    /* Slightly lighter for hover */
+    /* Neutrals - Light Theme */
+    --color-background: #EFF2EF;
+    /* Crème - Fond principal */
+    --color-surface: #FFFFFF;
+    /* Blanc - Cartes, surfaces */
+    --color-surface-hover: #F8F9F8;
+    /* Blanc cassé pour hover */
+    --color-surface-alt: #BCB2BD;
+    /* Lavande - Surfaces alternatives */
 
-    --color-border: #262626;
-    /* Neutral-800 */
-    --color-border-subtle: #1F1F1F;
-    --color-border-highlight: #404040;
+    --color-border: #C2C2C2;
+    /* Gris - Bordures principales */
+    --color-border-subtle: #D8D8D8;
+    /* Gris clair - Bordures subtiles */
+    --color-border-highlight: #BB8BA6;
+    /* Mauve - Bordures en focus */
 
-    /* Text Colors */
-    --color-text-main: #FFFFFF;
-    --color-text-muted: #9CA3AF;
-    /* Gray-400 */
-    --color-text-subtle: #6B7280;
-    /* Gray-500 */
+    /* Text Colors - Adjusted for light theme */
+    --color-text-main: #2A2530;
+    /* Presque noir pour texte principal */
+    --color-text-muted: #6B6570;
+    /* Gris moyen pour texte secondaire */
+    --color-text-subtle: #9B95A0;
+    /* Gris clair pour texte tertiaire */
+    --color-text-inverse: #FFFFFF;
+    /* Blanc pour texte sur fond foncé */
 
     /* Spacing */
     --spacing-sm: 0.5rem;
@@ -40,4 +51,9 @@
     --radius-lg: 1rem;
     /* 16px for cards */
     --radius-full: 9999px;
+
+    /* Shadows - Soft shadows for light theme */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
 }
