@@ -8,19 +8,14 @@ import { Input } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
 import { motion } from 'framer-motion';
 
-const clients = [
-    { id: 1, name: 'Jean Dupont', company: 'Tech Corp', status: 'Active', email: 'jean@tech.com', value: '12,500 €', avatar: 'JD', projects: 3 },
-    { id: 2, name: 'Marie Curie', company: 'Science Lab', status: 'Lead', email: 'marie@science.edu', value: '5,000 €', avatar: 'MC', projects: 1 },
-    { id: 3, name: 'Thomas Edison', company: 'Power Systems', status: 'Active', email: 'thomas@power.com', value: '25,000 €', avatar: 'TE', projects: 5 },
-    { id: 4, name: 'Grace Hopper', company: 'Navy Tech', status: 'Inactive', email: 'grace@navy.mil', value: '3,200 €', avatar: 'GH', projects: 0 },
-    { id: 5, name: 'Alan Turing', company: 'Enigma Solutions', status: 'Active', email: 'alan@enigma.com', value: '18,900 €', avatar: 'AT', projects: 2 },
-];
+// Clients will be loaded from database or created by user
+const clients: any[] = [];
 
 const pipeline = [
-    { stage: 'Prospects', count: 12, value: '45k €', color: 'from-blue-500 to-cyan-600', icon: Sparkles },
-    { stage: 'Proposition', count: 5, value: '28k €', color: 'from-violet-500 to-purple-600', icon: TrendingUp },
-    { stage: 'Négociation', count: 3, value: '15k €', color: 'from-amber-500 to-orange-600', icon: TrendingUp },
-    { stage: 'Closing', count: 2, value: '10k €', color: 'from-emerald-500 to-teal-600', icon: TrendingUp },
+    { stage: 'Prospects', count: 0, value: '0k €', color: 'from-blue-500 to-cyan-600', icon: Sparkles },
+    { stage: 'Proposition', count: 0, value: '0k €', color: 'from-violet-500 to-purple-600', icon: TrendingUp },
+    { stage: 'Négociation', count: 0, value: '0k €', color: 'from-amber-500 to-orange-600', icon: TrendingUp },
+    { stage: 'Closing', count: 0, value: '0k €', color: 'from-emerald-500 to-teal-600', icon: TrendingUp },
 ];
 
 export function Clients() {
