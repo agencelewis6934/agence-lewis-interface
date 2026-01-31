@@ -14,58 +14,15 @@ import { Modal } from '../components/ui/Modal';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const columns = [
-    { id: 'todo', title: 'À Faire', count: 3, color: 'from-gray-500 to-gray-600' },
-    { id: 'in-progress', title: 'En Cours', count: 2, color: 'from-blue-500 to-cyan-600' },
-    { id: 'review', title: 'En Révision', count: 1, color: 'from-amber-500 to-orange-600' },
-    { id: 'done', title: 'Terminé', count: 8, color: 'from-emerald-500 to-teal-600' },
+    { id: 'todo', title: 'À Faire', count: 0, color: 'from-gray-500 to-gray-600' },
+    { id: 'in-progress', title: 'En Cours', count: 0, color: 'from-blue-500 to-cyan-600' },
+    { id: 'review', title: 'En Révision', count: 0, color: 'from-amber-500 to-orange-600' },
+    { id: 'done', title: 'Terminé', count: 0, color: 'from-emerald-500 to-teal-600' },
 ];
 
-const projects = [
-    {
-        id: 1,
-        title: 'Refonte Site E-commerce',
-        client: 'Fashion Store',
-        status: 'in-progress',
-        priority: 'high',
-        deadline: 'Dans 3 jours',
-        tags: ['Web', 'React'],
-        team: ['AP', 'JD'],
-        progress: 65
-    },
-    {
-        id: 2,
-        title: 'Campagne Social Media',
-        client: 'Eco Green',
-        status: 'todo',
-        priority: 'medium',
-        deadline: 'Prochaine semaine',
-        tags: ['Marketing'],
-        team: ['MC'],
-        progress: 20
-    },
-    {
-        id: 3,
-        title: 'Branding Identity',
-        client: 'Luxe Hotel',
-        status: 'review',
-        priority: 'high',
-        deadline: 'Demain',
-        tags: ['Design'],
-        team: ['TE', 'AP'],
-        progress: 90
-    },
-    {
-        id: 4,
-        title: 'Application Mobile',
-        client: 'FitLife',
-        status: 'done',
-        priority: 'high',
-        deadline: 'Hier',
-        tags: ['Mobile', 'React Native'],
-        team: ['IB', 'AP'],
-        progress: 100
-    },
-];
+// Projects will be loaded from database or created by user
+const projects: any[] = [];
+
 
 export function Projects() {
     const { user } = useAuth();

@@ -4,12 +4,9 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Users, FolderGit2, TrendingUp, Activity, ArrowUpRight, ArrowDownRight, MoreHorizontal, Calendar } from 'lucide-react';
 
-const recentActivity = [
-    { id: 1, project: 'AI Recruiter Bot', client: 'TalentFlow', status: 'In Progress', date: '2 mins ago', amount: '€12.5k' },
-    { id: 2, project: 'Brand Identity', client: 'Luxe Hotel', status: 'Pending', date: '2 hours ago', amount: '€8.2k' },
-    { id: 3, project: 'Mobile App', client: 'FitLife', status: 'Completed', date: '5 hours ago', amount: '€24.0k' },
-    { id: 4, project: 'Web Redesign', client: 'Fashion Store', status: 'In Progress', date: '1 day ago', amount: '€5.5k' },
-];
+// Recent activity will be loaded from database
+const recentActivity: any[] = [];
+
 
 export const Dashboard: React.FC = () => {
     return (
@@ -33,10 +30,10 @@ export const Dashboard: React.FC = () => {
             {/* Stats Grid */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
                 {[
-                    { title: "Revenu Total", value: "€45,231.89", trend: "+20.1% vs mois dernier", trending: "up", icon: <TrendingUp className="h-4 w-4" /> },
-                    { title: "Nouveaux Clients", value: "+573", trend: "+201 depuis cette semaine", trending: "up", icon: <Users className="h-4 w-4" /> },
-                    { title: "Projets Actifs", value: "12", trend: "-2 terminés récemment", trending: "down", icon: <FolderGit2 className="h-4 w-4" /> },
-                    { title: "Taux d'Engagement", value: "85.4%", trend: "+1.2% satisfaction", trending: "up", icon: <Activity className="h-4 w-4" /> }
+                    { title: "Revenu Total", value: "€0.00", trend: "Aucune donnée", trending: "up", icon: <TrendingUp className="h-4 w-4" /> },
+                    { title: "Nouveaux Clients", value: "0", trend: "Aucun client", trending: "up", icon: <Users className="h-4 w-4" /> },
+                    { title: "Projets Actifs", value: "0", trend: "Aucun projet", trending: "down", icon: <FolderGit2 className="h-4 w-4" /> },
+                    { title: "Taux d'Engagement", value: "0%", trend: "Aucune donnée", trending: "up", icon: <Activity className="h-4 w-4" /> }
                 ].map((stat, i) => (
                     <div key={i}>
                         <StatCard
