@@ -1,4 +1,4 @@
-import { X, Building2, Mail, Phone, Clock, Tag, FolderKanban, FileText } from 'lucide-react';
+import { X, Building2, Mail, Phone, Clock, Tag, FolderKanban, FileText, Briefcase, MapPin } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -76,15 +76,27 @@ export function ViewClientModal({ isOpen, onClose, client }: ViewClientModalProp
                             <div className="flex items-center justify-between p-6 border-b border-border bg-surface-elevated/50">
                                 <div className="flex-1">
                                     <h2 className="text-2xl font-bold text-white mb-2">{client.contact_name}</h2>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <Badge className={getStatusColor(client.status)}>
                                             <Tag className="h-3 w-3 mr-1" />
                                             {client.status === 'active' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : 'Inactif'}
                                         </Badge>
+                                        {client.job_title && (
+                                            <span className="text-text-muted text-sm flex items-center gap-1 bg-surface-elevated px-2 py-1 rounded-md border border-border">
+                                                <Briefcase className="h-3 w-3" />
+                                                {client.job_title}
+                                            </span>
+                                        )}
                                         {client.company_name && (
-                                            <span className="text-text-muted text-sm flex items-center gap-1">
+                                            <span className="text-text-muted text-sm flex items-center gap-1 bg-surface-elevated px-2 py-1 rounded-md border border-border">
                                                 <Building2 className="h-3 w-3" />
                                                 {client.company_name}
+                                            </span>
+                                        )}
+                                        {client.city && (
+                                            <span className="text-text-muted text-sm flex items-center gap-1 bg-surface-elevated px-2 py-1 rounded-md border border-border">
+                                                <MapPin className="h-3 w-3" />
+                                                {client.city}
                                             </span>
                                         )}
                                     </div>

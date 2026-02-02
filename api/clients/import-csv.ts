@@ -53,11 +53,15 @@ export default async function handler(req: any, res: any) {
 
         // Mapping rules
         const mapping = {
-            company_name: ['company', 'entreprise', 'company_name', 'societe'],
-            email: ['email', 'mail'],
-            contact_name: ['contact_name', 'nom', 'fullname', 'contact'],
-            phone: ['phone', 'tel', 'telephone', 'mobile'],
-            notes: ['notes', 'commentaire', 'description']
+            company_name: ['company', 'entreprise', 'company_name', 'societe', 'organization'],
+            email: ['email', 'mail', 'e-mail'],
+            contact_name: ['contact_name', 'nom complet', 'fullname', 'contact'],
+            first_name: ['prenom', 'first name', 'firstname'],
+            last_name: ['nom', 'last name', 'lastname', 'surname'],
+            phone: ['phone', 'tel', 'telephone', 'mobile', 'portable'],
+            notes: ['notes', 'commentaire', 'description'],
+            job_title: ['poste', 'job title', 'fonction', 'position'],
+            city: ['ville', 'city', 'location', 'lieu']
         };
 
         const getMappedValue = (row: any, targetField: keyof typeof mapping) => {
@@ -89,9 +93,18 @@ export default async function handler(req: any, res: any) {
         rows.forEach(row => {
             const company_name = getMappedValue(row, 'company_name');
             const email = getMappedValue(row, 'email');
-            const contact_name = getMappedValue(row, 'contact_name');
+            let contact_name = getMappedValue(row, 'contact_name');
+            const first_name = getMappedValue(row, 'first_name');
+            const last_name = getMappedValue(row, 'last_name');
             const phone = getMappedValue(row, 'phone');
             const notes = getMappedValue(row, 'notes');
+            const job_title = getMappedValue(row, 'job_title');
+            const city = getMappedValue(row, 'city');
+
+            // Construct contact_name if not explicitly provided but first/last are
+            if (!contact_name && (first_name || last_name)) {
+                contact_name = [first_name, last_name].filter(Boolean).join(' ');
+            }
 
             // 1. Validation: company_name required
             if (!company_name) {
@@ -145,6 +158,8 @@ export default async function handler(req: any, res: any) {
                 email: email || null,
                 phone: phone || null,
                 notes: notes || null,
+                job_title: job_title || null,
+                city: city || null,
                 status: 'prospect',
                 user_id: userId,
                 avatar: getInitials(contact_name || company_name),

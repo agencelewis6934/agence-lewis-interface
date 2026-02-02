@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Building2, User, Mail, Phone } from 'lucide-react';
+import { X, Building2, User, Mail, Phone, Briefcase, MapPin } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
 import { Select } from '../ui/Select';
@@ -21,8 +21,10 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
     const [formData, setFormData] = useState({
         contact_name: '',
         company_name: '',
+        job_title: '',
         email: '',
         phone: '',
+        city: '',
         status: 'active',
         notes: '',
     });
@@ -33,8 +35,10 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
             setFormData({
                 contact_name: clientData.contact_name || '',
                 company_name: clientData.company_name || '',
+                job_title: clientData.job_title || '',
                 email: clientData.email || '',
                 phone: clientData.phone || '',
+                city: clientData.city || '',
                 status: clientData.status || 'active',
                 notes: clientData.notes || '',
             });
@@ -65,19 +69,23 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                 return;
             }
 
+            const clientPayload = {
+                contact_name: formData.contact_name,
+                company_name: formData.company_name || null,
+                job_title: formData.job_title || null,
+                email: formData.email || null,
+                phone: formData.phone || null,
+                city: formData.city || null,
+                status: formData.status,
+                notes: formData.notes || null,
+                avatar: getInitials(formData.contact_name),
+            };
+
             if (editMode && clientData) {
                 // Update existing client
                 const { error: clientError } = await supabase
                     .from('clients')
-                    .update({
-                        contact_name: formData.contact_name,
-                        company_name: formData.company_name || null,
-                        email: formData.email || null,
-                        phone: formData.phone || null,
-                        status: formData.status,
-                        notes: formData.notes || null,
-                        avatar: getInitials(formData.contact_name),
-                    })
+                    .update(clientPayload)
                     .eq('id', clientData.id);
 
                 if (clientError) throw clientError;
@@ -88,13 +96,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                 const { error: clientError } = await supabase
                     .from('clients')
                     .insert({
-                        contact_name: formData.contact_name,
-                        company_name: formData.company_name || null,
-                        email: formData.email || null,
-                        phone: formData.phone || null,
-                        status: formData.status,
-                        notes: formData.notes || null,
-                        avatar: getInitials(formData.contact_name),
+                        ...clientPayload,
                         user_id: user.id,
                     });
 
@@ -118,8 +120,10 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
         setFormData({
             contact_name: '',
             company_name: '',
+            job_title: '',
             email: '',
             phone: '',
+            city: '',
             status: 'active',
             notes: '',
         });
@@ -179,13 +183,22 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                         required
                                     />
 
-                                    <Input
-                                        label="Entreprise"
-                                        placeholder="Ex: Tech Corp"
-                                        leftIcon={<Building2 className="h-4 w-4" />}
-                                        value={formData.company_name}
-                                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
-                                    />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input
+                                            label="Entreprise"
+                                            placeholder="Ex: Tech Corp"
+                                            leftIcon={<Building2 className="h-4 w-4" />}
+                                            value={formData.company_name}
+                                            onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
+                                        />
+                                        <Input
+                                            label="Poste"
+                                            placeholder="Ex: CEO"
+                                            leftIcon={<Briefcase className="h-4 w-4" />}
+                                            value={formData.job_title}
+                                            onChange={(e) => setFormData({ ...formData, job_title: e.target.value })}
+                                        />
+                                    </div>
 
                                     <div className="grid grid-cols-2 gap-4">
                                         <Input
@@ -200,23 +213,32 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                         <Input
                                             label="Téléphone"
                                             type="tel"
-                                            placeholder="+33 6 12 34 56 78"
+                                            placeholder="+33 6..."
                                             leftIcon={<Phone className="h-4 w-4" />}
                                             value={formData.phone}
                                             onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                                         />
                                     </div>
 
-                                    <Select
-                                        label="Statut"
-                                        value={formData.status}
-                                        onChange={(value) => setFormData({ ...formData, status: value })}
-                                        options={[
-                                            { value: 'active', label: 'Client Actif' },
-                                            { value: 'prospect', label: 'Prospect' },
-                                            { value: 'inactive', label: 'Inactif' },
-                                        ]}
-                                    />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <Input
+                                            label="Ville"
+                                            placeholder="Ex: Paris"
+                                            leftIcon={<MapPin className="h-4 w-4" />}
+                                            value={formData.city}
+                                            onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                        />
+                                        <Select
+                                            label="Statut"
+                                            value={formData.status}
+                                            onChange={(value) => setFormData({ ...formData, status: value })}
+                                            options={[
+                                                { value: 'active', label: 'Client Actif' },
+                                                { value: 'prospect', label: 'Prospect' },
+                                                { value: 'inactive', label: 'Inactif' },
+                                            ]}
+                                        />
+                                    </div>
 
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium text-text-secondary">Notes / Commentaires</label>
