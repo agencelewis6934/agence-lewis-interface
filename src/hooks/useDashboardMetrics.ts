@@ -126,17 +126,16 @@ export function useDashboardMetrics() {
                 // Fallback to clients table if view doesn't exist/work
                 const { data: clients } = await supabase
                     .from('clients')
-                    .select('id, company_name, email, ltv')
-                    .order('ltv', { ascending: false })
+                    .select('id, contact_name, company_name, email')
                     .limit(5);
 
                 const formattedClients = clients?.map(c => ({
                     id: c.id,
-                    name: c.company_name,
+                    name: c.company_name || c.contact_name,
                     email: c.email || '',
-                    deals: 0, // Need to join projects to count deals, simplifying for speed
-                    value: (c.ltv || 0).toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }),
-                    avatar: c.company_name.substring(0, 2).toUpperCase()
+                    deals: 0,
+                    value: '0,00 €',
+                    avatar: (c.company_name || c.contact_name || 'C').substring(0, 2).toUpperCase()
                 })) || [];
 
                 setTopClients(formattedClients);

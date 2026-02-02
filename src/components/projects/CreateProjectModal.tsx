@@ -66,7 +66,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
             const { data, error } = await supabase
                 .from('clients')
                 .select('*')
-                .order('name');
+                .order('contact_name');
 
             if (error) throw error;
             setClients(data || []);
@@ -106,8 +106,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                 const { data: newClient, error: clientError } = await supabase
                     .from('clients')
                     .insert({
-                        name: formData.newClientName,
-                        company: formData.newClientCompany,
+                        contact_name: formData.newClientName,
+                        company_name: formData.newClientCompany,
                         email: formData.newClientEmail,
                         phone: formData.newClientPhone,
                         avatar: getInitials(formData.newClientName),
@@ -407,7 +407,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                                                     { value: '', label: 'Aucun client (optionnel)' },
                                                     ...clients.map(client => ({
                                                         value: client.id,
-                                                        label: `${client.name}${client.company ? ` - ${client.company}` : ''}`
+                                                        label: `${client.contact_name}${client.company_name ? ` - ${client.company_name}` : ''}`
                                                     }))
                                                 ]}
                                             />

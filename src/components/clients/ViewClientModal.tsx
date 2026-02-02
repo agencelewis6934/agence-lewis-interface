@@ -1,4 +1,4 @@
-import { X, Building2, Mail, Phone, Clock, Tag, FolderKanban } from 'lucide-react';
+import { X, Building2, Mail, Phone, Clock, Tag, FolderKanban, FileText } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -42,11 +42,11 @@ export function ViewClientModal({ isOpen, onClose, client }: ViewClientModalProp
 
     const getStatusColor = (status: string) => {
         const colors: Record<string, string> = {
-            'Active': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
-            'Lead': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
-            'Inactive': 'bg-gray-500/20 text-gray-300 border-gray-500/30',
+            'active': 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+            'prospect': 'bg-blue-500/20 text-blue-300 border-blue-500/30',
+            'inactive': 'bg-gray-500/20 text-gray-300 border-gray-500/30',
         };
-        return colors[status] || colors.Active;
+        return colors[status] || colors.active;
     };
 
     if (!client) return null;
@@ -75,16 +75,16 @@ export function ViewClientModal({ isOpen, onClose, client }: ViewClientModalProp
                             {/* Header */}
                             <div className="flex items-center justify-between p-6 border-b border-border bg-surface-elevated/50">
                                 <div className="flex-1">
-                                    <h2 className="text-2xl font-bold text-white mb-2">{client.name}</h2>
+                                    <h2 className="text-2xl font-bold text-white mb-2">{client.contact_name}</h2>
                                     <div className="flex items-center gap-2">
                                         <Badge className={getStatusColor(client.status)}>
                                             <Tag className="h-3 w-3 mr-1" />
-                                            {client.status}
+                                            {client.status === 'active' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : 'Inactif'}
                                         </Badge>
-                                        {client.company && (
+                                        {client.company_name && (
                                             <span className="text-text-muted text-sm flex items-center gap-1">
                                                 <Building2 className="h-3 w-3" />
-                                                {client.company}
+                                                {client.company_name}
                                             </span>
                                         )}
                                     </div>
@@ -149,6 +149,19 @@ export function ViewClientModal({ isOpen, onClose, client }: ViewClientModalProp
                                             </p>
                                         </div>
                                     </div>
+
+                                    {/* Notes */}
+                                    {client.notes && (
+                                        <div className="col-span-2 space-y-2">
+                                            <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                                                <FileText className="h-4 w-4" />
+                                                Notes / Commentaires
+                                            </h3>
+                                            <div className="bg-surface-elevated p-4 rounded-xl border border-border">
+                                                <p className="text-white whitespace-pre-wrap">{client.notes}</p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Projects */}

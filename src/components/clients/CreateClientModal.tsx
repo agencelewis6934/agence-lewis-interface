@@ -19,22 +19,24 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        name: '',
-        company: '',
+        contact_name: '',
+        company_name: '',
         email: '',
         phone: '',
-        status: 'Active',
+        status: 'active',
+        notes: '',
     });
 
     // Pre-fill form in edit mode
     useEffect(() => {
         if (isOpen && editMode && clientData) {
             setFormData({
-                name: clientData.name || '',
-                company: clientData.company || '',
+                contact_name: clientData.contact_name || '',
+                company_name: clientData.company_name || '',
                 email: clientData.email || '',
                 phone: clientData.phone || '',
-                status: clientData.status || 'Active',
+                status: clientData.status || 'active',
+                notes: clientData.notes || '',
             });
         }
     }, [isOpen, editMode, clientData]);
@@ -57,7 +59,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Utilisateur non authentifié');
 
-            if (!formData.name) {
+            if (!formData.contact_name) {
                 toast.error('Le nom du client est requis');
                 setLoading(false);
                 return;
@@ -68,12 +70,13 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                 const { error: clientError } = await supabase
                     .from('clients')
                     .update({
-                        name: formData.name,
-                        company: formData.company || null,
+                        contact_name: formData.contact_name,
+                        company_name: formData.company_name || null,
                         email: formData.email || null,
                         phone: formData.phone || null,
                         status: formData.status,
-                        avatar: getInitials(formData.name),
+                        notes: formData.notes || null,
+                        avatar: getInitials(formData.contact_name),
                     })
                     .eq('id', clientData.id);
 
@@ -85,12 +88,13 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                 const { error: clientError } = await supabase
                     .from('clients')
                     .insert({
-                        name: formData.name,
-                        company: formData.company || null,
+                        contact_name: formData.contact_name,
+                        company_name: formData.company_name || null,
                         email: formData.email || null,
                         phone: formData.phone || null,
                         status: formData.status,
-                        avatar: getInitials(formData.name),
+                        notes: formData.notes || null,
+                        avatar: getInitials(formData.contact_name),
                         user_id: user.id,
                     });
 
@@ -112,11 +116,12 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
 
     const resetForm = () => {
         setFormData({
-            name: '',
-            company: '',
+            contact_name: '',
+            company_name: '',
             email: '',
             phone: '',
-            status: 'Active',
+            status: 'active',
+            notes: '',
         });
     };
 
@@ -169,8 +174,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                         label="Nom du client"
                                         placeholder="Ex: Jean Dupont"
                                         leftIcon={<User className="h-4 w-4" />}
-                                        value={formData.name}
-                                        onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                                        value={formData.contact_name}
+                                        onChange={(e) => setFormData({ ...formData, contact_name: e.target.value })}
                                         required
                                     />
 
@@ -178,8 +183,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                         label="Entreprise"
                                         placeholder="Ex: Tech Corp"
                                         leftIcon={<Building2 className="h-4 w-4" />}
-                                        value={formData.company}
-                                        onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                                        value={formData.company_name}
+                                        onChange={(e) => setFormData({ ...formData, company_name: e.target.value })}
                                     />
 
                                     <div className="grid grid-cols-2 gap-4">
@@ -207,11 +212,22 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                         value={formData.status}
                                         onChange={(value) => setFormData({ ...formData, status: value })}
                                         options={[
-                                            { value: 'Active', label: 'Client Actif' },
-                                            { value: 'Lead', label: 'Prospect' },
-                                            { value: 'Inactive', label: 'Inactif' },
+                                            { value: 'active', label: 'Client Actif' },
+                                            { value: 'prospect', label: 'Prospect' },
+                                            { value: 'inactive', label: 'Inactif' },
                                         ]}
                                     />
+
+                                    <div className="space-y-2">
+                                        <label className="text-sm font-medium text-text-secondary">Notes / Commentaires</label>
+                                        <textarea
+                                            className="w-full px-4 py-3 bg-surface-elevated border border-border rounded-xl text-white placeholder:text-text-muted focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all resize-none"
+                                            rows={3}
+                                            placeholder="Notes sur le client..."
+                                            value={formData.notes}
+                                            onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
 
                                 {/* Footer */}
@@ -227,7 +243,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false
                                     <Button
                                         type="submit"
                                         variant="primary"
-                                        disabled={loading || !formData.name}
+                                        disabled={loading || !formData.contact_name}
                                     >
                                         {loading ? (editMode ? 'Modification...' : 'Création...') : (editMode ? 'Modifier le Client' : 'Créer le Client')}
                                     </Button>

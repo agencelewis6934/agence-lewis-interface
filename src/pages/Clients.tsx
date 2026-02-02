@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Filter, MoreHorizontal, Mail, Phone, TrendingUp, Sparkles, Eye, Pencil, Trash2, Users } from 'lucide-react';
+import { ImportClientsModal } from '../components/clients/ImportClientsModal';
+import { Sparkles, TrendingUp, Filter, Search, Plus, User, Mail, Phone, MoreHorizontal, Trash2, Edit2, Eye, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
@@ -16,8 +17,9 @@ import { ViewClientModal } from '../components/clients/ViewClientModal';
 export function Clients() {
     const [clients, setClients] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false); // Renamed from isModalOpen
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; clientId: string | null; clientName: string }>({ isOpen: false, clientId: null, clientName: '' });
     const [viewModal, setViewModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
     const [editModal, setEditModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
@@ -46,17 +48,17 @@ export function Clients() {
 
     const filteredClients = useMemo(() => {
         return clients.filter(client =>
-            client.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (client.company && client.company.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (client.contact_name && client.contact_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+            (client.company_name && client.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
             (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase()))
         );
     }, [clients, searchQuery]);
 
     const pipeline = useMemo(() => {
         const counts = {
-            Prospects: clients.filter(c => c.status === 'Lead').length,
-            Active: clients.filter(c => c.status === 'Active').length,
-            Inactive: clients.filter(c => c.status === 'Inactive').length,
+            Prospects: clients.filter(c => c.status === 'prospect').length,
+            Active: clients.filter(c => c.status === 'active').length,
+            Inactive: clients.filter(c => c.status === 'inactive').length,
         };
 
         return [
@@ -102,9 +104,24 @@ export function Clients() {
                         Suivez vos clients et votre pipeline commercial
                     </p>
                 </div>
-                <Button variant="primary" onClick={() => setIsModalOpen(true)}>
-                    <Plus className="mr-2 h-4 w-4" /> Ajouter un client
-                </Button>
+                <div className="flex gap-3">
+                    <Button
+                        variant="outline"
+                        onClick={() => setIsImportModalOpen(true)}
+                        className="border-border hover:border-primary/50 group"
+                    >
+                        <Upload className="mr-2 h-4 w-4 text-text-muted group-hover:text-primary transition-colors" />
+                        Importer CSV
+                    </Button>
+                    <Button
+                        variant="primary"
+                        onClick={() => setIsCreateModalOpen(true)}
+                        className="shadow-lg shadow-primary/20"
+                    >
+                        <Plus className="mr-2 h-4 w-4" />
+                        Nouveau Client
+                    </Button>
+                </div>
             </motion.div>
 
             {/* Pipeline Stats */}
@@ -192,10 +209,10 @@ export function Clients() {
                                             <td colSpan={5} className="px-6 py-20 text-center text-text-muted">
                                                 <div className="flex flex-col items-center gap-4">
                                                     <div className="p-4 bg-surface-elevated rounded-full">
-                                                        <Users className="h-8 w-8 opacity-20" />
+                                                        <User className="h-8 w-8 opacity-20" /> {/* Changed from Users to User */}
                                                     </div>
                                                     <p>Aucun client trouvé</p>
-                                                    <Button variant="ghost" className="text-primary" onClick={() => setIsModalOpen(true)}>
+                                                    <Button variant="ghost" className="text-primary" onClick={() => setIsCreateModalOpen(true)}> {/* Changed to setIsCreateModalOpen */}
                                                         Ajouter votre premier client
                                                     </Button>
                                                 </div>
@@ -213,22 +230,22 @@ export function Clients() {
                                                 <td className="px-6 py-5">
                                                     <div className="flex items-center gap-4">
                                                         <Avatar
-                                                            fallback={client.avatar || (client.name ? client.name[0] : 'C')}
+                                                            fallback={client.avatar || (client.contact_name ? client.contact_name[0] : 'C')}
                                                             className="h-11 w-11 ring-2 ring-border-subtle group-hover:ring-primary/40 transition-all text-sm font-bold"
                                                         />
                                                         <div>
                                                             <p className="text-sm font-bold text-white group-hover:text-primary transition-colors">
-                                                                {client.name}
+                                                                {client.contact_name}
                                                             </p>
-                                                            <p className="text-xs text-text-subtle">{client.company}</p>
+                                                            <p className="text-xs text-text-subtle">{client.company_name}</p>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <Badge
-                                                        variant={client.status === 'Active' ? 'success' : client.status === 'Lead' ? 'warning' : 'neutral'}
+                                                        variant={client.status === 'active' ? 'success' : client.status === 'prospect' ? 'warning' : 'neutral'}
                                                     >
-                                                        {client.status === 'Active' ? 'Actif' : client.status === 'Lead' ? 'Prospect' : 'Inactif'}
+                                                        {client.status === 'active' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : 'Inactif'}
                                                     </Badge>
                                                 </td>
                                                 <td className="px-6 py-5">
@@ -272,14 +289,14 @@ export function Clients() {
                                                             <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, client })}>
                                                                 Voir le profil
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, client })}>
+                                                            <DropdownMenuItem icon={<Edit2 className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, client })}>
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
                                                             <DropdownMenuItem
                                                                 destructive
                                                                 icon={<Trash2 className="h-4 w-4" />}
-                                                                onClick={() => setDeleteConfirm({ isOpen: true, clientId: client.id, clientName: client.name })}
+                                                                onClick={() => setDeleteConfirm({ isOpen: true, clientId: client.id, clientName: client.contact_name })}
                                                             >
                                                                 Supprimer
                                                             </DropdownMenuItem>
@@ -297,8 +314,8 @@ export function Clients() {
             </motion.div>
 
             <CreateClientModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
+                isOpen={isCreateModalOpen}
+                onClose={() => setIsCreateModalOpen(false)}
                 onSuccess={loadClients}
             />
 
@@ -315,6 +332,12 @@ export function Clients() {
             />
 
             {/* View Client Modal */}
+            <ImportClientsModal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                onSuccess={loadClients}
+            />
+
             <ViewClientModal
                 isOpen={viewModal.isOpen}
                 onClose={() => setViewModal({ isOpen: false, client: null })}

@@ -104,8 +104,8 @@ function DraggableProjectCard({
             </div>
             {project.clients && (
                 <p className="text-xs text-text-muted">
-                    {project.clients.name}
-                    {project.clients.company && ` - ${project.clients.company}`}
+                    {project.clients.contact_name}
+                    {project.clients.company_name && ` - ${project.clients.company_name}`}
                 </p>
             )}
             {project.price && (
@@ -167,7 +167,7 @@ export function Projects() {
     const filteredProjects = useMemo(() => {
         return projects.filter((p: any) => {
             const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (p.clients?.name && p.clients.name.toLowerCase().includes(searchQuery.toLowerCase()));
+                (p.clients?.contact_name && p.clients.contact_name.toLowerCase().includes(searchQuery.toLowerCase()));
             const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
             const matchesPriority = filterPriority === 'all' || p.priority === filterPriority;
             return matchesSearch && matchesStatus && matchesPriority;
@@ -197,8 +197,8 @@ export function Projects() {
                     *,
                     clients (
                         id,
-                        name,
-                        company,
+                        contact_name,
+                        company_name,
                         avatar
                     )
                 `)
@@ -479,8 +479,8 @@ export function Projects() {
                                 <h4 className="font-semibold text-white mb-2">{activeProject.name}</h4>
                                 {activeProject.clients && (
                                     <p className="text-xs text-text-muted">
-                                        {activeProject.clients.name}
-                                        {activeProject.clients.company && ` - ${activeProject.clients.company}`}
+                                        {activeProject.clients.contact_name}
+                                        {activeProject.clients.company_name && ` - ${activeProject.clients.company_name}`}
                                     </p>
                                 )}
                                 {activeProject.price && (
@@ -532,7 +532,7 @@ export function Projects() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-text-muted">
-                                                    {project.clients?.name || 'Aucun client'}
+                                                    {project.clients?.contact_name || 'Aucun client'}
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <Badge variant="neutral">

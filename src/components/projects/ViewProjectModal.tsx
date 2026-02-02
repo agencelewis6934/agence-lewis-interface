@@ -162,9 +162,9 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                                                 Client
                                             </h3>
                                             <div className="bg-surface-elevated p-4 rounded-xl border border-border">
-                                                <p className="text-white font-medium">{client.name}</p>
-                                                {client.company && (
-                                                    <p className="text-text-muted text-sm mt-1">{client.company}</p>
+                                                <p className="text-white font-medium">{client.contact_name}</p>
+                                                {client.company_name && (
+                                                    <p className="text-text-muted text-sm mt-1">{client.company_name}</p>
                                                 )}
                                             </div>
                                         </div>
@@ -231,8 +231,8 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                                             Paiement
                                         </h3>
                                         <div className={`p-4 rounded-xl border flex items-center gap-3 ${project.is_paid
-                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
-                                                : 'bg-primary/10 border-primary/20 text-primary'
+                                            ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                                            : 'bg-primary/10 border-primary/20 text-primary'
                                             }`}>
                                             {project.is_paid ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
                                             <div>
