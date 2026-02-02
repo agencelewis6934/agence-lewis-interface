@@ -71,13 +71,19 @@ function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: strin
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
-                            <DropdownMenuItem
-                                destructive
-                                icon={<Trash2 className="h-4 w-4" />}
-                                onClick={() => onDelete(task.id)}
-                            >
-                                Supprimer
-                            </DropdownMenuItem>
+                            <div onPointerDown={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem
+                                    destructive
+                                    icon={<Trash2 className="h-4 w-4" />}
+                                    onClick={() => {
+                                        console.log('DEBUG: Delete task button clicked');
+                                        toast.info('Suppression demandée...');
+                                        onDelete(task.id);
+                                    }}
+                                >
+                                    Supprimer
+                                </DropdownMenuItem>
+                            </div>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -206,6 +212,8 @@ export function Tasks() {
     };
 
     const handleDeleteTask = async (id: string) => {
+        console.log('DEBUG: handleDeleteTask triggered for id:', id);
+        toast.info('Traitement de la suppression...');
         if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return;
 
         try {
@@ -515,13 +523,19 @@ export function Tasks() {
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
-                                                            <DropdownMenuItem
-                                                                destructive
-                                                                icon={<Trash2 className="h-4 w-4" />}
-                                                                onClick={() => handleDeleteTask(task.id)}
-                                                            >
-                                                                Supprimer
-                                                            </DropdownMenuItem>
+                                                            <div onPointerDown={(e) => e.stopPropagation()}>
+                                                                <DropdownMenuItem
+                                                                    destructive
+                                                                    icon={<Trash2 className="h-4 w-4" />}
+                                                                    onClick={() => {
+                                                                        console.log('DEBUG: Delete task list button clicked');
+                                                                        toast.info('Suppression demandée (list)...');
+                                                                        handleDeleteTask(task.id);
+                                                                    }}
+                                                                >
+                                                                    Supprimer
+                                                                </DropdownMenuItem>
+                                                            </div>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>

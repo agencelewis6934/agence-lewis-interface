@@ -71,13 +71,19 @@ function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
-                            <DropdownMenuItem
-                                destructive
-                                icon={<Trash2 className="h-4 w-4" />}
-                                onClick={() => onDelete(project.id)}
-                            >
-                                Supprimer
-                            </DropdownMenuItem>
+                            <div onPointerDown={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem
+                                    destructive
+                                    icon={<Trash2 className="h-4 w-4" />}
+                                    onClick={() => {
+                                        console.log('DEBUG: Delete project button clicked');
+                                        toast.info('Suppression demandée...');
+                                        onDelete(project.id);
+                                    }}
+                                >
+                                    Supprimer
+                                </DropdownMenuItem>
+                            </div>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -186,6 +192,8 @@ export function Projects() {
     };
 
     const handleDeleteProject = async (id: string) => {
+        console.log('DEBUG: handleDeleteProject triggered for id:', id);
+        toast.info('Traitement de la suppression...');
         if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
 
         try {
@@ -510,13 +518,19 @@ export function Projects() {
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
-                                                            <DropdownMenuItem
-                                                                destructive
-                                                                icon={<Trash2 className="h-4 w-4" />}
-                                                                onClick={() => handleDeleteProject(project.id)}
-                                                            >
-                                                                Supprimer
-                                                            </DropdownMenuItem>
+                                                            <div onPointerDown={(e) => e.stopPropagation()}>
+                                                                <DropdownMenuItem
+                                                                    destructive
+                                                                    icon={<Trash2 className="h-4 w-4" />}
+                                                                    onClick={() => {
+                                                                        console.log('DEBUG: Delete project list button clicked');
+                                                                        toast.info('Suppression demandée (list)...');
+                                                                        handleDeleteProject(project.id);
+                                                                    }}
+                                                                >
+                                                                    Supprimer
+                                                                </DropdownMenuItem>
+                                                            </div>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
