@@ -269,14 +269,6 @@ export function Clients() {
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                                                 Modifier
                                                             </DropdownMenuItem>
-                                                            <div className="h-px bg-border-subtle my-1" />
-                                                            <DropdownMenuItem
-                                                                destructive
-                                                                icon={<Trash2 className="h-4 w-4" />}
-                                                                onMouseDown={() => handleDeleteClient(client.id)}
-                                                            >
-                                                                Supprimer
-                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>

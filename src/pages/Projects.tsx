@@ -70,16 +70,6 @@ function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (
                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                 Modifier
                             </DropdownMenuItem>
-                            <div className="h-px bg-border-subtle my-1" />
-                            <DropdownMenuItem
-                                destructive
-                                icon={<Trash2 className="h-4 w-4" />}
-                                onMouseDown={() => {
-                                    onDelete(project.id);
-                                }}
-                            >
-                                Supprimer
-                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -510,16 +500,6 @@ export function Projects() {
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                                                 Modifier
-                                                            </DropdownMenuItem>
-                                                            <div className="h-px bg-border-subtle my-1" />
-                                                            <DropdownMenuItem
-                                                                destructive
-                                                                icon={<Trash2 className="h-4 w-4" />}
-                                                                onMouseDown={() => {
-                                                                    handleDeleteProject(project.id);
-                                                                }}
-                                                            >
-                                                                Supprimer
                                                             </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
