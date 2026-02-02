@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
-import type { Database } from '../types/supabase';
 
 type KpiData = {
     revenue: number;
@@ -63,6 +62,11 @@ export function useDashboardMetrics() {
                 const activeCount = projects?.filter(p => ['in-progress', 'review'].includes(p.status)).length || 0;
 
                 // Calculate Revenue Growth (Placeholder or actual logic if needed)
+
+                const { count: newClientsCount } = await supabase
+                    .from('clients')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', new Date(new Date().setDate(1)).toISOString()); // This month
 
                 setKpi(prev => ({
                     ...prev,
