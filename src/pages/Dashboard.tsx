@@ -47,10 +47,10 @@ export const Dashboard: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
                     title="Projets Terminés"
-                    value={kpi.completedRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                    value={kpi.completedProjects.toString()}
                     trendType="up"
                     icon={<CheckCircle2 size={20} />}
-                    subtitle="Valeur des projets terminés"
+                    subtitle="Nombre de projets terminés"
                     delay={0.1}
                 />
                 <KpiCard
