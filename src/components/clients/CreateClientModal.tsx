@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { X, Building2, User, Mail, Phone } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -11,9 +11,11 @@ interface CreateClientModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    editMode?: boolean;
+    clientData?: any;
 }
 
-export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientModalProps) {
+export function CreateClientModal({ isOpen, onClose, onSuccess, editMode = false, clientData }: CreateClientModalProps) {
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -23,6 +25,19 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
         phone: '',
         status: 'Active',
     });
+
+    // Pre-fill form in edit mode
+    useEffect(() => {
+        if (isOpen && editMode && clientData) {
+            setFormData({
+                name: clientData.name || '',
+                company: clientData.company || '',
+                email: clientData.email || '',
+                phone: clientData.phone || '',
+                status: clientData.status || 'Active',
+            });
+        }
+    }, [isOpen, editMode, clientData]);
 
     const getInitials = (name: string) => {
         return name
@@ -48,27 +63,48 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                 return;
             }
 
-            const { error: clientError } = await supabase
-                .from('clients')
-                .insert({
-                    name: formData.name,
-                    company: formData.company || null,
-                    email: formData.email || null,
-                    phone: formData.phone || null,
-                    status: formData.status,
-                    avatar: getInitials(formData.name),
-                    user_id: user.id,
-                });
+            if (editMode && clientData) {
+                // Update existing client
+                const { error: clientError } = await supabase
+                    .from('clients')
+                    .update({
+                        name: formData.name,
+                        company: formData.company || null,
+                        email: formData.email || null,
+                        phone: formData.phone || null,
+                        status: formData.status,
+                        avatar: getInitials(formData.name),
+                    })
+                    .eq('id', clientData.id);
 
-            if (clientError) throw clientError;
+                if (clientError) throw clientError;
 
-            toast.success('Client créé avec succès !');
+                toast.success('Client modifié avec succès !');
+            } else {
+                // Create new client
+                const { error: clientError } = await supabase
+                    .from('clients')
+                    .insert({
+                        name: formData.name,
+                        company: formData.company || null,
+                        email: formData.email || null,
+                        phone: formData.phone || null,
+                        status: formData.status,
+                        avatar: getInitials(formData.name),
+                        user_id: user.id,
+                    });
+
+                if (clientError) throw clientError;
+
+                toast.success('Client créé avec succès !');
+            }
+
             onSuccess();
             onClose();
             resetForm();
         } catch (error: any) {
-            console.error('Error creating client:', error);
-            toast.error(error.message || 'Erreur lors de la création du client');
+            console.error(`Error ${editMode ? 'updating' : 'creating'} client:`, error);
+            toast.error(error.message || `Erreur lors de la ${editMode ? 'modification' : 'création'} du client`);
         } finally {
             setLoading(false);
         }
@@ -113,8 +149,8 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                             {/* Header */}
                             <div className="flex items-center justify-between p-6 border-b border-border bg-surface-elevated/50">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">Nouveau Client</h2>
-                                    <p className="text-sm text-text-muted mt-1">Ajoutez un nouveau client à votre base de données</p>
+                                    <h2 className="text-2xl font-bold text-white">{editMode ? 'Modifier le Client' : 'Nouveau Client'}</h2>
+                                    <p className="text-sm text-text-muted mt-1">{editMode ? 'Modifiez les informations du client' : 'Ajoutez un nouveau client à votre base de données'}</p>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -193,7 +229,7 @@ export function CreateClientModal({ isOpen, onClose, onSuccess }: CreateClientMo
                                         variant="primary"
                                         disabled={loading || !formData.name}
                                     >
-                                        {loading ? 'Création...' : 'Créer le Client'}
+                                        {loading ? (editMode ? 'Modification...' : 'Création...') : (editMode ? 'Modifier le Client' : 'Créer le Client')}
                                     </Button>
                                 </div>
                             </form>

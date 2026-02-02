@@ -11,6 +11,7 @@ import { Avatar } from '../components/ui/Avatar';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateClientModal } from '../components/clients/CreateClientModal';
+import { ViewClientModal } from '../components/clients/ViewClientModal';
 
 export function Clients() {
     const [clients, setClients] = useState<any[]>([]);
@@ -18,6 +19,8 @@ export function Clients() {
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; clientId: string | null; clientName: string }>({ isOpen: false, clientId: null, clientName: '' });
+    const [viewModal, setViewModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
 
     useEffect(() => {
         loadClients();
@@ -266,10 +269,10 @@ export function Clients() {
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end" className="w-48">
-                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, client })}>
                                                                 Voir le profil
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, client })}>
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
@@ -309,6 +312,22 @@ export function Clients() {
                 confirmText="Supprimer"
                 cancelText="Annuler"
                 destructive
+            />
+
+            {/* View Client Modal */}
+            <ViewClientModal
+                isOpen={viewModal.isOpen}
+                onClose={() => setViewModal({ isOpen: false, client: null })}
+                client={viewModal.client}
+            />
+
+            {/* Edit Client Modal */}
+            <CreateClientModal
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false, client: null })}
+                onSuccess={loadClients}
+                editMode={true}
+                clientData={editModal.client}
             />
         </div>
     );

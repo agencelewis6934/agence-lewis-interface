@@ -11,9 +11,11 @@ interface CreateTaskModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    editMode?: boolean;
+    taskData?: any;
 }
 
-export function CreateTaskModal({ isOpen, onClose, onSuccess }: CreateTaskModalProps) {
+export function CreateTaskModal({ isOpen, onClose, onSuccess, editMode = false, taskData }: CreateTaskModalProps) {
     const [loading, setLoading] = useState(false);
     const [projects, setProjects] = useState<any[]>([]);
 
@@ -26,12 +28,22 @@ export function CreateTaskModal({ isOpen, onClose, onSuccess }: CreateTaskModalP
         projectId: '',
     });
 
-    // Load existing projects
+    // Load existing projects and pre-fill form in edit mode
     useEffect(() => {
         if (isOpen) {
             loadProjects();
+            if (editMode && taskData) {
+                setFormData({
+                    title: taskData.title || '',
+                    description: taskData.description || '',
+                    status: taskData.status || 'todo',
+                    priority: taskData.priority || 'medium',
+                    deadline: taskData.deadline || '',
+                    projectId: taskData.project_id || '',
+                });
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, editMode, taskData]);
 
     const loadProjects = async () => {
         try {
@@ -56,42 +68,83 @@ export function CreateTaskModal({ isOpen, onClose, onSuccess }: CreateTaskModalP
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('User not authenticated');
 
-            // Create task
-            const { error: taskError } = await supabase
-                .from('tasks')
-                .insert({
-                    title: formData.title,
-                    description: formData.description,
-                    status: formData.status,
-                    priority: formData.priority,
-                    deadline: formData.deadline || null,
-                    project_id: formData.projectId || null,
-                    user_id: user.id,
-                })
-                .select()
-                .single();
+            if (editMode && taskData) {
+                // Update existing task
+                const { error: taskError } = await supabase
+                    .from('tasks')
+                    .update({
+                        title: formData.title,
+                        description: formData.description,
+                        status: formData.status,
+                        priority: formData.priority,
+                        deadline: formData.deadline || null,
+                        project_id: formData.projectId || null,
+                    })
+                    .eq('id', taskData.id);
 
-            if (taskError) throw taskError;
+                if (taskError) throw taskError;
 
-            // If deadline, create calendar event
-            if (formData.deadline) {
-                await supabase.from('calendar_events').insert({
-                    title: `Tâche: ${formData.title}`,
-                    start_time: formData.deadline,
-                    end_time: formData.deadline,
-                    type: 'task',
-                    description: `Deadline pour la tâche ${formData.title}`,
-                    user_id: user.id,
-                });
+                // Update calendar event if deadline changed
+                if (formData.deadline !== taskData.deadline) {
+                    // Delete old event
+                    await supabase
+                        .from('calendar_events')
+                        .delete()
+                        .eq('title', `Tâche: ${taskData.title}`);
+
+                    // Create new event if deadline exists
+                    if (formData.deadline) {
+                        await supabase.from('calendar_events').insert({
+                            title: `Tâche: ${formData.title}`,
+                            start_time: formData.deadline,
+                            end_time: formData.deadline,
+                            type: 'task',
+                            description: `Deadline pour la tâche ${formData.title}`,
+                            user_id: user.id,
+                        });
+                    }
+                }
+
+                toast.success('Tâche modifiée avec succès !');
+            } else {
+                // Create task
+                const { error: taskError } = await supabase
+                    .from('tasks')
+                    .insert({
+                        title: formData.title,
+                        description: formData.description,
+                        status: formData.status,
+                        priority: formData.priority,
+                        deadline: formData.deadline || null,
+                        project_id: formData.projectId || null,
+                        user_id: user.id,
+                    })
+                    .select()
+                    .single();
+
+                if (taskError) throw taskError;
+
+                // If deadline, create calendar event
+                if (formData.deadline) {
+                    await supabase.from('calendar_events').insert({
+                        title: `Tâche: ${formData.title}`,
+                        start_time: formData.deadline,
+                        end_time: formData.deadline,
+                        type: 'task',
+                        description: `Deadline pour la tâche ${formData.title}`,
+                        user_id: user.id,
+                    });
+                }
+
+                toast.success('Tâche créée avec succès !');
             }
 
-            toast.success('Tâche créée avec succès !');
             onSuccess();
             onClose();
             resetForm();
         } catch (error: any) {
-            console.error('Error creating task:', error);
-            toast.error(error.message || 'Erreur lors de la création de la tâche');
+            console.error(`Error ${editMode ? 'updating' : 'creating'} task:`, error);
+            toast.error(error.message || `Erreur lors de la ${editMode ? 'modification' : 'création'} de la tâche`);
         } finally {
             setLoading(false);
         }
@@ -137,8 +190,8 @@ export function CreateTaskModal({ isOpen, onClose, onSuccess }: CreateTaskModalP
                             {/* Header */}
                             <div className="flex items-center justify-between p-6 border-b border-border bg-surface-elevated/50">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">Nouvelle Tâche</h2>
-                                    <p className="text-sm text-text-muted mt-1">Créez une nouvelle tâche et associez-la à un projet</p>
+                                    <h2 className="text-2xl font-bold text-white">{editMode ? 'Modifier la Tâche' : 'Nouvelle Tâche'}</h2>
+                                    <p className="text-sm text-text-muted mt-1">{editMode ? 'Modifiez les informations de la tâche' : 'Créez une nouvelle tâche et associez-la à un projet'}</p>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -259,7 +312,7 @@ export function CreateTaskModal({ isOpen, onClose, onSuccess }: CreateTaskModalP
                                         variant="primary"
                                         disabled={loading || !formData.title}
                                     >
-                                        {loading ? 'Création...' : 'Créer la Tâche'}
+                                        {loading ? (editMode ? 'Modification...' : 'Création...') : (editMode ? 'Modifier la Tâche' : 'Créer la Tâche')}
                                     </Button>
                                 </div>
                             </form>

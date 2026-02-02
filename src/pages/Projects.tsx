@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateProjectModal } from '../components/projects/CreateProjectModal';
+import { ViewProjectModal } from '../components/projects/ViewProjectModal';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
@@ -33,7 +34,17 @@ const columns = [
 ];
 
 // Draggable Project Card Component
-function DraggableProjectCard({ project, setDeleteConfirm }: { project: any; setDeleteConfirm: (value: { isOpen: boolean; projectId: string | null; projectName: string }) => void }) {
+function DraggableProjectCard({
+    project,
+    setDeleteConfirm,
+    setViewModal,
+    setEditModal
+}: {
+    project: any;
+    setDeleteConfirm: (value: { isOpen: boolean; projectId: string | null; projectName: string }) => void;
+    setViewModal: (value: { isOpen: boolean; project: any | null }) => void;
+    setEditModal: (value: { isOpen: boolean; project: any | null }) => void;
+}) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
         data: { project },
@@ -65,10 +76,10 @@ function DraggableProjectCard({ project, setDeleteConfirm }: { project: any; set
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, project })}>
                                 Voir détails
                             </DropdownMenuItem>
-                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, project })}>
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
@@ -136,6 +147,8 @@ export function Projects() {
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [activeId, setActiveId] = useState<string | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; projectId: string | null; projectName: string }>({ isOpen: false, projectId: null, projectName: '' });
+    const [viewModal, setViewModal] = useState<{ isOpen: boolean; project: any | null }>({ isOpen: false, project: null });
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; project: any | null }>({ isOpen: false, project: null });
 
     const filteredProjects = useMemo(() => {
         return projects.filter((p: any) => {
@@ -413,6 +426,8 @@ export function Projects() {
                                                                 key={project.id}
                                                                 project={project}
                                                                 setDeleteConfirm={setDeleteConfirm}
+                                                                setViewModal={setViewModal}
+                                                                setEditModal={setEditModal}
                                                             />
                                                         ))}
                                                     </div>
@@ -506,10 +521,10 @@ export function Projects() {
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, project })}>
                                                                 Voir détails
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, project })}>
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
@@ -543,6 +558,22 @@ export function Projects() {
                 confirmText="Supprimer"
                 cancelText="Annuler"
                 destructive
+            />
+
+            {/* View Project Modal */}
+            <ViewProjectModal
+                isOpen={viewModal.isOpen}
+                onClose={() => setViewModal({ isOpen: false, project: null })}
+                project={viewModal.project}
+            />
+
+            {/* Edit Project Modal */}
+            <CreateProjectModal
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false, project: null })}
+                onSuccess={loadProjects}
+                editMode={true}
+                projectData={editModal.project}
             />
 
             {/* Loading State */}

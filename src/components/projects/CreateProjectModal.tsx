@@ -11,9 +11,11 @@ interface CreateProjectModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSuccess: () => void;
+    editMode?: boolean;
+    projectData?: any;
 }
 
-export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProjectModalProps) {
+export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = false, projectData }: CreateProjectModalProps) {
     const [loading, setLoading] = useState(false);
     const [clients, setClients] = useState<any[]>([]);
     const [isNewClient, setIsNewClient] = useState(false);
@@ -33,12 +35,28 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
         newClientPhone: '',
     });
 
-    // Load existing clients
+    // Load existing clients and pre-fill form in edit mode
     useEffect(() => {
         if (isOpen) {
             loadClients();
+            if (editMode && projectData) {
+                setFormData({
+                    projectName: projectData.name || '',
+                    description: projectData.description || '',
+                    status: projectData.status || 'todo',
+                    priority: projectData.priority || 'medium',
+                    price: projectData.price?.toString() || '',
+                    deadline: projectData.deadline || '',
+                    existingClientId: projectData.client_id || '',
+                    newClientName: '',
+                    newClientCompany: '',
+                    newClientEmail: '',
+                    newClientPhone: '',
+                });
+                setIsNewClient(false);
+            }
         }
-    }, [isOpen]);
+    }, [isOpen, editMode, projectData]);
 
     const loadClients = async () => {
         try {
@@ -74,8 +92,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
 
             let clientId = formData.existingClientId;
 
-            // Create new client if needed
-            if (isNewClient) {
+            // Create new client if needed (only in create mode)
+            if (isNewClient && !editMode) {
                 if (!formData.newClientName) {
                     toast.error('Le nom du client est requis');
                     setLoading(false);
@@ -99,43 +117,85 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                 clientId = newClient.id;
             }
 
-            // Create project
-            const { error: projectError } = await supabase
-                .from('projects')
-                .insert({
-                    name: formData.projectName,
-                    client_id: clientId || null,
-                    status: formData.status,
-                    priority: formData.priority,
-                    price: formData.price ? parseFloat(formData.price) : null,
-                    description: formData.description,
-                    deadline: formData.deadline || null,
-                    user_id: user.id,
-                })
-                .select()
-                .single();
+            if (editMode && projectData) {
+                // Update existing project
+                const { error: projectError } = await supabase
+                    .from('projects')
+                    .update({
+                        name: formData.projectName,
+                        client_id: clientId || null,
+                        status: formData.status,
+                        priority: formData.priority,
+                        price: formData.price ? parseFloat(formData.price) : null,
+                        description: formData.description,
+                        deadline: formData.deadline || null,
+                    })
+                    .eq('id', projectData.id);
 
-            if (projectError) throw projectError;
+                if (projectError) throw projectError;
 
-            // If deadline, create calendar event
-            if (formData.deadline) {
-                await supabase.from('calendar_events').insert({
-                    title: `Deadline: ${formData.projectName}`,
-                    start_time: formData.deadline,
-                    end_time: formData.deadline,
-                    type: 'deadline',
-                    description: `Deadline pour le projet ${formData.projectName}`,
-                    user_id: user.id,
-                });
+                // Update calendar event if deadline changed
+                if (formData.deadline !== projectData.deadline) {
+                    // Delete old event
+                    await supabase
+                        .from('calendar_events')
+                        .delete()
+                        .eq('title', `Deadline: ${projectData.name}`);
+
+                    // Create new event if deadline exists
+                    if (formData.deadline) {
+                        await supabase.from('calendar_events').insert({
+                            title: `Deadline: ${formData.projectName}`,
+                            start_time: formData.deadline,
+                            end_time: formData.deadline,
+                            type: 'deadline',
+                            description: `Deadline pour le projet ${formData.projectName}`,
+                            user_id: user.id,
+                        });
+                    }
+                }
+
+                toast.success('Projet modifié avec succès !');
+            } else {
+                // Create new project
+                const { error: projectError } = await supabase
+                    .from('projects')
+                    .insert({
+                        name: formData.projectName,
+                        client_id: clientId || null,
+                        status: formData.status,
+                        priority: formData.priority,
+                        price: formData.price ? parseFloat(formData.price) : null,
+                        description: formData.description,
+                        deadline: formData.deadline || null,
+                        user_id: user.id,
+                    })
+                    .select()
+                    .single();
+
+                if (projectError) throw projectError;
+
+                // If deadline, create calendar event
+                if (formData.deadline) {
+                    await supabase.from('calendar_events').insert({
+                        title: `Deadline: ${formData.projectName}`,
+                        start_time: formData.deadline,
+                        end_time: formData.deadline,
+                        type: 'deadline',
+                        description: `Deadline pour le projet ${formData.projectName}`,
+                        user_id: user.id,
+                    });
+                }
+
+                toast.success('Projet créé avec succès !');
             }
 
-            toast.success('Projet créé avec succès !');
             onSuccess();
             onClose();
             resetForm();
         } catch (error: any) {
-            console.error('Error creating project:', error);
-            toast.error(error.message || 'Erreur lors de la création du projet');
+            console.error(`Error ${editMode ? 'updating' : 'creating'} project:`, error);
+            toast.error(error.message || `Erreur lors de la ${editMode ? 'modification' : 'création'} du projet`);
         } finally {
             setLoading(false);
         }
@@ -187,8 +247,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                             {/* Header */}
                             <div className="flex items-center justify-between p-6 border-b border-border bg-surface-elevated/50">
                                 <div>
-                                    <h2 className="text-2xl font-bold text-white">Nouveau Projet</h2>
-                                    <p className="text-sm text-text-muted mt-1">Créez un nouveau projet et associez-le à un client</p>
+                                    <h2 className="text-2xl font-bold text-white">{editMode ? 'Modifier le Projet' : 'Nouveau Projet'}</h2>
+                                    <p className="text-sm text-text-muted mt-1">{editMode ? 'Modifiez les informations du projet' : 'Créez un nouveau projet et associez-le à un client'}</p>
                                 </div>
                                 <Button
                                     variant="ghost"
@@ -380,7 +440,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess }: CreateProject
                                         variant="primary"
                                         disabled={loading || !formData.projectName}
                                     >
-                                        {loading ? 'Création...' : 'Créer le Projet'}
+                                        {loading ? (editMode ? 'Modification...' : 'Création...') : (editMode ? 'Modifier le Projet' : 'Créer le Projet')}
                                     </Button>
                                 </div>
                             </form>

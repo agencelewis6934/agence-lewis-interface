@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateTaskModal } from '../components/tasks/CreateTaskModal';
+import { ViewTaskModal } from '../components/tasks/ViewTaskModal';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
@@ -33,7 +34,17 @@ const columns = [
 ];
 
 // Draggable Task Card Component
-function DraggableTaskCard({ task, setDeleteConfirm }: { task: any; setDeleteConfirm: (value: { isOpen: boolean; taskId: string | null; taskTitle: string }) => void }) {
+function DraggableTaskCard({
+    task,
+    setDeleteConfirm,
+    setViewModal,
+    setEditModal
+}: {
+    task: any;
+    setDeleteConfirm: (value: { isOpen: boolean; taskId: string | null; taskTitle: string }) => void;
+    setViewModal: (value: { isOpen: boolean; task: any | null }) => void;
+    setEditModal: (value: { isOpen: boolean; task: any | null }) => void;
+}) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: { task },
@@ -65,10 +76,10 @@ function DraggableTaskCard({ task, setDeleteConfirm }: { task: any; setDeleteCon
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, task })}>
                                 Voir détails
                             </DropdownMenuItem>
-                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, task })}>
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
@@ -141,6 +152,8 @@ export function Tasks() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({ isOpen: false, taskId: null, taskTitle: '' });
+    const [viewModal, setViewModal] = useState<{ isOpen: boolean; task: any | null }>({ isOpen: false, task: null });
+    const [editModal, setEditModal] = useState<{ isOpen: boolean; task: any | null }>({ isOpen: false, task: null });
 
     // Configure drag sensors
     const sensors = useSensors(
@@ -398,6 +411,8 @@ export function Tasks() {
                                                                 key={task.id}
                                                                 task={task}
                                                                 setDeleteConfirm={setDeleteConfirm}
+                                                                setViewModal={setViewModal}
+                                                                setEditModal={setEditModal}
                                                             />
                                                         ))}
                                                     </div>
@@ -511,10 +526,10 @@ export function Tasks() {
                                                             </Button>
                                                         </DropdownMenuTrigger>
                                                         <DropdownMenuContent align="end">
-                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => setViewModal({ isOpen: true, task })}>
                                                                 Voir détails
                                                             </DropdownMenuItem>
-                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, task })}>
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
@@ -548,6 +563,22 @@ export function Tasks() {
                 confirmText="Supprimer"
                 cancelText="Annuler"
                 destructive
+            />
+
+            {/* View Task Modal */}
+            <ViewTaskModal
+                isOpen={viewModal.isOpen}
+                onClose={() => setViewModal({ isOpen: false, task: null })}
+                task={viewModal.task}
+            />
+
+            {/* Edit Task Modal */}
+            <CreateTaskModal
+                isOpen={editModal.isOpen}
+                onClose={() => setEditModal({ isOpen: false, task: null })}
+                onSuccess={loadTasks}
+                editMode={true}
+                taskData={editModal.task}
             />
 
             {/* Loading State */}
