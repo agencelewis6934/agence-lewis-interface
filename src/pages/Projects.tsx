@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, List } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, MoreVertical, Trash2, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateProjectModal } from '../components/projects/CreateProjectModal';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import {
     DndContext,
     DragOverlay,
@@ -31,7 +32,7 @@ const columns = [
 ];
 
 // Draggable Project Card Component
-function DraggableProjectCard({ project }: { project: any }) {
+function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (id: string) => void }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
         data: { project },
@@ -51,9 +52,36 @@ function DraggableProjectCard({ project }: { project: any }) {
             {...attributes}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: isDragging ? 0.5 : 1, scale: 1 }}
-            className="p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing"
+            className="group p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing relative"
         >
-            <h4 className="font-semibold text-white mb-2">{project.name}</h4>
+            <div className="flex items-start justify-between gap-2">
+                <h4 className="font-semibold text-white mb-2 flex-1">{project.name}</h4>
+                <div onPointerDown={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-text-muted hover:text-white -mr-2 -mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                Voir détails
+                            </DropdownMenuItem>
+                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                Modifier
+                            </DropdownMenuItem>
+                            <div className="h-px bg-border-subtle my-1" />
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onClick={() => onDelete(project.id)}
+                            >
+                                Supprimer
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
             {project.clients && (
                 <p className="text-xs text-text-muted">
                     {project.clients.name}
@@ -144,6 +172,35 @@ export function Projects() {
             toast.error('Erreur lors du chargement des projets');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleDeleteProject = async (id: string) => {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
+
+        try {
+            // Get project name for calendar event cleanup
+            const project = projects.find(p => p.id === id);
+
+            const { error } = await supabase
+                .from('projects')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            if (project?.name) {
+                await supabase
+                    .from('calendar_events')
+                    .delete()
+                    .eq('title', `Deadline: ${project.name}`);
+            }
+
+            toast.success('Projet supprimé');
+            loadProjects();
+        } catch (error: any) {
+            console.error('Error deleting project:', error);
+            toast.error('Erreur lors de la suppression');
         }
     };
 
@@ -339,7 +396,11 @@ export function Projects() {
                                                 ) : (
                                                     <div className="space-y-3">
                                                         {columnProjects.map((project) => (
-                                                            <DraggableProjectCard key={project.id} project={project} />
+                                                            <DraggableProjectCard
+                                                                key={project.id}
+                                                                project={project}
+                                                                onDelete={handleDeleteProject}
+                                                            />
                                                         ))}
                                                     </div>
                                                 )}

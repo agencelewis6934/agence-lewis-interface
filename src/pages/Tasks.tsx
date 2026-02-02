@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, LayoutGrid, List } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, MoreVertical, Trash2, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateTaskModal } from '../components/tasks/CreateTaskModal';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
 import {
     DndContext,
     DragOverlay,
@@ -31,7 +32,7 @@ const columns = [
 ];
 
 // Draggable Task Card Component
-function DraggableTaskCard({ task }: { task: any }) {
+function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: string) => void }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: { task },
@@ -51,9 +52,36 @@ function DraggableTaskCard({ task }: { task: any }) {
             {...attributes}
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: isDragging ? 0.5 : 1, scale: 1 }}
-            className="p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing"
+            className="group p-4 bg-surface-elevated rounded-xl border border-border hover:border-primary/50 transition-all cursor-grab active:cursor-grabbing relative"
         >
-            <h4 className="font-semibold text-white mb-2">{task.title}</h4>
+            <div className="flex items-start justify-between gap-2">
+                <h4 className="font-semibold text-white mb-2 flex-1">{task.title}</h4>
+                <div onPointerDown={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-text-muted hover:text-white -mr-2 -mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <MoreVertical className="h-4 w-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                Voir détails
+                            </DropdownMenuItem>
+                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                Modifier
+                            </DropdownMenuItem>
+                            <div className="h-px bg-border-subtle my-1" />
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onClick={() => onDelete(task.id)}
+                            >
+                                Supprimer
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                </div>
+            </div>
             {task.description && (
                 <p className="text-xs text-text-muted mb-2 line-clamp-2">
                     {task.description}
@@ -174,6 +202,25 @@ export function Tasks() {
         } catch (error: any) {
             console.error('Error updating task status:', error);
             toast.error('Erreur lors de la mise à jour de la tâche');
+        }
+    };
+
+    const handleDeleteTask = async (id: string) => {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return;
+
+        try {
+            const { error } = await supabase
+                .from('tasks')
+                .delete()
+                .eq('id', id);
+
+            if (error) throw error;
+
+            toast.success('Tâche supprimée');
+            loadTasks();
+        } catch (error: any) {
+            console.error('Error deleting task:', error);
+            toast.error('Erreur lors de la suppression');
         }
     };
 
@@ -343,7 +390,11 @@ export function Tasks() {
                                                 ) : (
                                                     <div className="space-y-3">
                                                         {columnTasks.map((task) => (
-                                                            <DraggableTaskCard key={task.id} task={task} />
+                                                            <DraggableTaskCard
+                                                                key={task.id}
+                                                                task={task}
+                                                                onDelete={handleDeleteTask}
+                                                            />
                                                         ))}
                                                     </div>
                                                 )}
@@ -394,10 +445,102 @@ export function Tasks() {
                 </DndContext>
             )}
 
+            {/* List View */}
+            {viewMode === 'list' && (
+                <Card className="overflow-hidden">
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="border-b border-border bg-surface-elevated/50">
+                                    <tr className="text-text-muted text-xs font-bold uppercase tracking-wider">
+                                        <th className="px-6 py-4">Tâche</th>
+                                        <th className="px-6 py-4">Projet</th>
+                                        <th className="px-6 py-4">Statut</th>
+                                        <th className="px-6 py-4">Priorité</th>
+                                        <th className="px-6 py-4">Échéance</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {tasks.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-8 text-center text-text-muted">
+                                                Aucune tâche trouvée
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        getColumnTasks('all').map((task) => (
+                                            <tr key={task.id} className="group hover:bg-surface-elevated/30 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <p className="font-semibold text-white">{task.title}</p>
+                                                    {task.description && (
+                                                        <p className="text-xs text-text-muted line-clamp-1">{task.description}</p>
+                                                    )}
+                                                </td>
+                                                <td className="px-6 py-4 text-text-muted">
+                                                    {task.projects?.name || 'Aucun projet'}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant="neutral">
+                                                        {columns.find(c => c.id === task.status)?.title}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge
+                                                        variant={
+                                                            task.priority === 'high' ? 'destructive' :
+                                                                task.priority === 'medium' ? 'warning' : 'neutral'
+                                                        }
+                                                    >
+                                                        {task.priority === 'high' ? 'Haute' :
+                                                            task.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-text-muted text-sm">
+                                                    {task.deadline ? new Date(task.deadline).toLocaleDateString('fr-FR') : '-'}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-text-muted hover:text-white">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                                                Voir détails
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                                                Modifier
+                                                            </DropdownMenuItem>
+                                                            <div className="h-px bg-border-subtle my-1" />
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => handleDeleteTask(task.id)}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
+            )}
+
             {/* Loading State */}
             {loading && (
                 <div className="flex items-center justify-center py-12">
-                    <div className="text-text-muted">Chargement des tâches...</div>
+                    <div className="flex flex-col items-center gap-3">
+                        <div className="h-8 w-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                        <p className="text-text-muted font-medium">Chargement des tâches...</p>
+                    </div>
                 </div>
             )}
         </div>
