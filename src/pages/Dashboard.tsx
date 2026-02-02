@@ -92,8 +92,9 @@ export const Dashboard: React.FC = () => {
                         initial={{ opacity: 0, scale: 0.98 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5 }}
+                        className="h-[280px]"
                     >
-                        <SalesOverviewChart data={salesData} />
+                        <ProfitTrendChart data={profitTrend} />
                     </motion.div>
 
                     <motion.div
@@ -128,9 +129,8 @@ export const Dashboard: React.FC = () => {
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.8 }}
-                            className="h-[280px]"
                         >
-                            <ProfitTrendChart data={profitTrend} />
+                            <SalesOverviewChart data={salesData} />
                         </motion.div>
 
 
