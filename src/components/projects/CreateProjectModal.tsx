@@ -6,6 +6,7 @@ import { Select } from '../ui/Select';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '../../lib/supabase';
 import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
 
 interface CreateProjectModalProps {
     isOpen: boolean;
@@ -27,6 +28,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
         priority: 'medium',
         price: '',
         deadline: '',
+        is_paid: false,
         // Client fields
         existingClientId: '',
         newClientName: '',
@@ -47,6 +49,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                     priority: projectData.priority || 'medium',
                     price: projectData.price?.toString() || '',
                     deadline: projectData.deadline || '',
+                    is_paid: projectData.is_paid || false,
                     existingClientId: projectData.client_id || '',
                     newClientName: '',
                     newClientCompany: '',
@@ -129,6 +132,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                         price: formData.price ? parseFloat(formData.price) : null,
                         description: formData.description,
                         deadline: formData.deadline || null,
+                        is_paid: formData.is_paid,
                     })
                     .eq('id', projectData.id);
 
@@ -168,6 +172,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                         price: formData.price ? parseFloat(formData.price) : null,
                         description: formData.description,
                         deadline: formData.deadline || null,
+                        is_paid: formData.is_paid,
                         user_id: user.id,
                     })
                     .select()
@@ -209,6 +214,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
             priority: 'medium',
             price: '',
             deadline: '',
+            is_paid: false,
             existingClientId: '',
             newClientName: '',
             newClientCompany: '',
@@ -332,6 +338,36 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                                                 value={formData.deadline}
                                                 onChange={(e) => setFormData({ ...formData, deadline: e.target.value })}
                                             />
+                                        </div>
+
+                                        <div className="flex items-center justify-between p-4 bg-surface-elevated/50 border border-border rounded-xl">
+                                            <div className="flex items-center gap-3">
+                                                <div className={cn(
+                                                    "w-10 h-10 rounded-full flex items-center justify-center",
+                                                    formData.is_paid ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"
+                                                )}>
+                                                    <Euro className="h-5 w-5" />
+                                                </div>
+                                                <div>
+                                                    <p className="font-medium text-white">Statut du Paiement</p>
+                                                    <p className="text-xs text-text-muted">{formData.is_paid ? 'Projet payé (comptabilisé dans le profit)' : 'Projet non payé (masqué des métriques)'}</p>
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, is_paid: !formData.is_paid })}
+                                                className={cn(
+                                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
+                                                    formData.is_paid ? "bg-emerald-500" : "bg-border"
+                                                )}
+                                            >
+                                                <span
+                                                    className={cn(
+                                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
+                                                        formData.is_paid ? "translate-x-6" : "translate-x-1"
+                                                    )}
+                                                />
+                                            </button>
                                         </div>
                                     </div>
 

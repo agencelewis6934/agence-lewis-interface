@@ -53,10 +53,10 @@ export function useDashboardMetrics() {
 
                 const totalRevenue = invoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
 
-                // 2. Fetch Sales Overview (Projects by Status)
+                // 2. Fetch Sales Overview (Projects by Payment Status)
                 const { data: projects } = await supabase
                     .from('projects')
-                    .select('status, price, created_at');
+                    .select('status, price, created_at, is_paid');
 
                 // Update Active Projects KPI
                 const activeCount = projects?.filter(p => ['in-progress', 'review'].includes(p.status)).length || 0;
@@ -75,9 +75,9 @@ export function useDashboardMetrics() {
                     newClients: newClientsCount || 0
                 }));
 
-                // Calculate Sales Data based on status instead of missing tags
+                // Calculate Sales Data based on PAID projects
                 const statusMap = new Map<string, number>();
-                projects?.forEach(p => {
+                projects?.filter(p => p.is_paid).forEach(p => {
                     const status = p.status === 'in-progress' ? 'En Cours' :
                         p.status === 'review' ? 'En Révision' :
                             p.status === 'done' ? 'Terminé' : 'À Faire';
@@ -95,14 +95,14 @@ export function useDashboardMetrics() {
                 setSalesData(salesChartData);
 
                 // 3. Calculate Profit Trend and Total Profit
-                // Filter projects that are NOT in 'todo'
-                const startedProjects = projects?.filter(p => p.status !== 'todo') || [];
+                // Filter projects that ARE marked as PAID
+                const paidProjects = projects?.filter(p => p.is_paid) || [];
 
                 // Group by month for the trend chart
                 const monthlyData = new Map<string, number>();
                 const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-                startedProjects.forEach(p => {
+                paidProjects.forEach(p => {
                     const date = new Date(p.created_at);
                     const monthKey = months[date.getMonth()];
                     const current = monthlyData.get(monthKey) || 0;

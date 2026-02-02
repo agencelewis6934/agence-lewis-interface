@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, LayoutGrid, List, MoreVertical, Trash2, Eye, Pencil } from 'lucide-react';
+import { Search, Plus, LayoutGrid, List, MoreVertical, Trash2, Eye, Pencil, CheckCircle2, Circle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
@@ -38,12 +38,14 @@ function DraggableProjectCard({
     project,
     setDeleteConfirm,
     setViewModal,
-    setEditModal
+    setEditModal,
+    onTogglePayment
 }: {
     project: any;
     setDeleteConfirm: (value: { isOpen: boolean; projectId: string | null; projectName: string }) => void;
     setViewModal: (value: { isOpen: boolean; project: any | null }) => void;
     setEditModal: (value: { isOpen: boolean; project: any | null }) => void;
+    onTogglePayment: (project: any) => void;
 }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
@@ -82,6 +84,12 @@ function DraggableProjectCard({
                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, project })}>
                                 Modifier
                             </DropdownMenuItem>
+                            <DropdownMenuItem
+                                icon={project.is_paid ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                onClick={() => onTogglePayment(project)}
+                            >
+                                {project.is_paid ? 'Marquer comme non payé' : 'Marquer comme payé'}
+                            </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
                             <DropdownMenuItem
                                 destructive
@@ -116,6 +124,12 @@ function DraggableProjectCard({
                     {project.priority === 'high' ? 'Haute' :
                         project.priority === 'medium' ? 'Moyenne' : 'Basse'}
                 </Badge>
+            )}
+            {project.is_paid && (
+                <div className="absolute top-4 right-10 flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                    <span className="text-[10px] font-medium text-emerald-500 uppercase tracking-wider">Payé</span>
+                </div>
             )}
         </motion.div>
     );
@@ -197,6 +211,23 @@ export function Projects() {
             toast.error('Erreur lors du chargement des projets');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleTogglePayment = async (project: any) => {
+        try {
+            const { error } = await supabase
+                .from('projects')
+                .update({ is_paid: !project.is_paid })
+                .eq('id', project.id);
+
+            if (error) throw error;
+
+            toast.success(project.is_paid ? 'Projet marqué comme non payé' : 'Projet marqué comme payé');
+            loadProjects();
+        } catch (error: any) {
+            console.error('Error toggling payment status:', error);
+            toast.error('Erreur lors de la mise à jour du paiement');
         }
     };
 
@@ -428,6 +459,7 @@ export function Projects() {
                                                                 setDeleteConfirm={setDeleteConfirm}
                                                                 setViewModal={setViewModal}
                                                                 setEditModal={setEditModal}
+                                                                onTogglePayment={handleTogglePayment}
                                                             />
                                                         ))}
                                                     </div>
@@ -489,7 +521,15 @@ export function Projects() {
                                         filteredProjects.map((project: any) => (
                                             <tr key={project.id} className="group hover:bg-surface-elevated/30 transition-colors">
                                                 <td className="px-6 py-4">
-                                                    <p className="font-semibold text-white">{project.name}</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <p className="font-semibold text-white">{project.name}</p>
+                                                        {project.is_paid && (
+                                                            <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
+                                                                <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" />
+                                                                <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Payé</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4 text-text-muted">
                                                     {project.clients?.name || 'Aucun client'}
@@ -526,6 +566,12 @@ export function Projects() {
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => setEditModal({ isOpen: true, project })}>
                                                                 Modifier
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem
+                                                                icon={project.is_paid ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                                onClick={() => handleTogglePayment(project)}
+                                                            >
+                                                                {project.is_paid ? 'Marquer comme non payé' : 'Marquer comme payé'}
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
                                                             <DropdownMenuItem

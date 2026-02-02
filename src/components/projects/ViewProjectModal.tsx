@@ -1,4 +1,4 @@
-import { X, Calendar, Euro, User, FileText, Clock, Tag } from 'lucide-react';
+import { X, Calendar, Euro, User, FileText, Clock, Tag, CheckCircle2, Circle } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -221,6 +221,30 @@ export function ViewProjectModal({ isOpen, onClose, project }: ViewProjectModalP
                                                     year: 'numeric'
                                                 })}
                                             </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Payment Status */}
+                                    <div className="space-y-2">
+                                        <h3 className="text-sm font-semibold text-text-secondary flex items-center gap-2">
+                                            <Euro className="h-4 w-4" />
+                                            Paiement
+                                        </h3>
+                                        <div className={`p-4 rounded-xl border flex items-center gap-3 ${project.is_paid
+                                                ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500'
+                                                : 'bg-primary/10 border-primary/20 text-primary'
+                                            }`}>
+                                            {project.is_paid ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+                                            <div>
+                                                <p className="font-bold uppercase tracking-wider text-xs">
+                                                    {project.is_paid ? 'Payé' : 'Non payé'}
+                                                </p>
+                                                <p className="text-[10px] opacity-80 mt-0.5">
+                                                    {project.is_paid
+                                                        ? 'Ce projet est inclus dans les métriques financières.'
+                                                        : 'Ce projet est masqué des métriques financières.'}
+                                                </p>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
