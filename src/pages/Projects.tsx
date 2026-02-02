@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, LayoutGrid, List, MoreVertical, Trash2, Eye, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '../components/ui/Button';
@@ -135,6 +135,16 @@ export function Projects() {
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [activeId, setActiveId] = useState<string | null>(null);
 
+    const filteredProjects = useMemo(() => {
+        return projects.filter((p: any) => {
+            const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (p.clients?.name && p.clients.name.toLowerCase().includes(searchQuery.toLowerCase()));
+            const matchesStatus = filterStatus === 'all' || p.status === filterStatus;
+            const matchesPriority = filterPriority === 'all' || p.priority === filterPriority;
+            return matchesSearch && matchesStatus && matchesPriority;
+        });
+    }, [projects, searchQuery, filterStatus, filterPriority]);
+
     // Configure drag sensors
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -262,7 +272,7 @@ export function Projects() {
 
     // Calculate column counts
     const getColumnProjects = (columnId: string) => {
-        return projects.filter(p => p.status === columnId);
+        return filteredProjects.filter((p: any) => p.status === columnId);
     };
 
     // Get active project for drag overlay
@@ -432,6 +442,92 @@ export function Projects() {
                         ) : null}
                     </DragOverlay>
                 </DndContext>
+            )}
+
+            {/* List View */}
+            {viewMode === 'list' && (
+                <Card className="overflow-hidden">
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left">
+                                <thead className="border-b border-border bg-surface-elevated/50">
+                                    <tr className="text-text-muted text-xs font-bold uppercase tracking-wider">
+                                        <th className="px-6 py-4">Projet</th>
+                                        <th className="px-6 py-4">Client</th>
+                                        <th className="px-6 py-4">Statut</th>
+                                        <th className="px-6 py-4">Budget</th>
+                                        <th className="px-6 py-4">Priorité</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-border">
+                                    {filteredProjects.length === 0 ? (
+                                        <tr>
+                                            <td colSpan={6} className="px-6 py-8 text-center text-text-muted">
+                                                Aucun projet trouvé
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        filteredProjects.map((project: any) => (
+                                            <tr key={project.id} className="group hover:bg-surface-elevated/30 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <p className="font-semibold text-white">{project.name}</p>
+                                                </td>
+                                                <td className="px-6 py-4 text-text-muted">
+                                                    {project.clients?.name || 'Aucun client'}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge variant="neutral">
+                                                        {columns.find(c => c.id === project.status)?.title}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-primary font-bold">
+                                                    {project.price ? `${project.price} €` : '-'}
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <Badge
+                                                        variant={
+                                                            project.priority === 'high' ? 'destructive' :
+                                                                project.priority === 'medium' ? 'warning' : 'neutral'
+                                                        }
+                                                    >
+                                                        {project.priority === 'high' ? 'Haute' :
+                                                            project.priority === 'medium' ? 'Moyenne' : 'Basse'}
+                                                    </Badge>
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-text-muted hover:text-white">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuItem icon={<Eye className="h-4 w-4" />} onClick={() => toast.info('Détails bientôt disponibles')}>
+                                                                Voir détails
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
+                                                                Modifier
+                                                            </DropdownMenuItem>
+                                                            <div className="h-px bg-border-subtle my-1" />
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => handleDeleteProject(project.id)}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </CardContent>
+                </Card>
             )}
 
             {/* Loading State */}

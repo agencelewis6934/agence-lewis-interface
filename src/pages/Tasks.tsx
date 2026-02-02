@@ -193,7 +193,7 @@ export function Tasks() {
 
             // Update local state
             setTasks(prevTasks =>
-                prevTasks.map(task =>
+                prevTasks.map((task: any) =>
                     task.id === taskId ? { ...task, status: newStatus } : task
                 )
             );
@@ -249,14 +249,15 @@ export function Tasks() {
 
     // Get tasks for a specific column
     const getColumnTasks = (columnId: string) => {
-        return tasks.filter(task => {
-            const matchesStatus = task.status === columnId;
+        return tasks.filter((task: any) => {
+            const matchesStatus = columnId === 'all' || task.status === columnId;
             const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (task.description && task.description.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (task.projects && task.projects.name.toLowerCase().includes(searchQuery.toLowerCase()));
             const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+            const matchesStatusFilter = statusFilter === 'all' || task.status === statusFilter;
 
-            return matchesStatus && matchesSearch && matchesPriority;
+            return matchesStatus && matchesSearch && matchesPriority && matchesStatusFilter;
         });
     };
 
@@ -469,7 +470,7 @@ export function Tasks() {
                                             </td>
                                         </tr>
                                     ) : (
-                                        getColumnTasks('all').map((task) => (
+                                        getColumnTasks('all').map((task: any) => (
                                             <tr key={task.id} className="group hover:bg-surface-elevated/30 transition-colors">
                                                 <td className="px-6 py-4">
                                                     <p className="font-semibold text-white">{task.title}</p>
