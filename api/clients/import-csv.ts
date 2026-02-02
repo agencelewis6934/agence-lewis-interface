@@ -1,14 +1,29 @@
-import { supabase } from '../_lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import Papa from 'papaparse';
 
 export default async function handler(req: any, res: any) {
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method Not Allowed' });
+    // Helper to get env vars
+    const getEnv = (key: string) => process.env[key] || process.env[`VITE_${key}`];
+    const supabaseUrl = getEnv('SUPABASE_URL');
+    const supabaseAnonKey = getEnv('SUPABASE_ANON_KEY');
+
+    if (!supabaseUrl || !supabaseAnonKey) {
+        console.error('Missing Supabase environment variables');
+        return res.status(500).json({
+            error: 'Server Configuration Error: Missing Supabase Environment Variables',
+            debug: {
+                urlPresent: !!supabaseUrl,
+                keyPresent: !!supabaseAnonKey
+            }
+        });
     }
 
-    if (!supabase) {
-        console.error('Supabase client not initialized in handler');
-        return res.status(500).json({ error: 'Server Configuration Error: Missing Supabase Environment Variables' });
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        auth: { persistSession: false, autoRefreshToken: false }
+    });
+
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
     try {
