@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, FolderGit2, Activity, Calendar, Download } from 'lucide-react';
+import { TrendingUp, FolderGit2, Activity, Calendar } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { KpiCard } from '../components/dashboard/KpiCard';
 import { SalesOverviewChart } from '../components/dashboard/SalesOverviewChart';
@@ -39,10 +39,8 @@ export const Dashboard: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-3">
                     <Button variant="outline" className="hidden sm:flex border-border/50 text-white hover:border-primary/50 backdrop-blur-md">
-                        <Calendar className="mr-2 h-4 w-4 text-primary" /> Jan 2026
-                    </Button>
-                    <Button variant="primary" className="shadow-lg shadow-primary/20">
-                        <Download className="mr-2 h-4 w-4" /> Rapport
+                        <Calendar className="mr-2 h-4 w-4 text-primary" />
+                        {new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                     </Button>
                 </div>
             </motion.div>
