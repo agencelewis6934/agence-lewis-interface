@@ -77,6 +77,7 @@ export function useDashboardMetrics() {
                 const { count: newClientsCount } = await supabase
                     .from('clients')
                     .select('*', { count: 'exact', head: true })
+                    .eq('status', 'active') // Only count active clients
                     .gte('created_at', new Date(new Date().setDate(1)).toISOString()); // This month
 
                 setKpi(prev => ({
