@@ -115,10 +115,14 @@ export function ImportClientsModal({ isOpen, onClose, onSuccess }: ImportClients
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error('Utilisateur non authentifié');
 
+            const { data: { session } } = await supabase.auth.getSession();
+            if (!session) throw new Error('Session expirée');
+
             const response = await fetch('/api/clients/import-csv', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${session.access_token}`
                 },
                 body: JSON.stringify({
                     csvContent,

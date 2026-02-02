@@ -19,6 +19,11 @@ export default async function handler(req: any, res: any) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+        global: {
+            headers: {
+                Authorization: req.headers.authorization,
+            },
+        },
         auth: { persistSession: false, autoRefreshToken: false }
     });
 
