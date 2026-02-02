@@ -1,23 +1,20 @@
-import { supabase } from '../../../src/lib/supabase';
+import { supabase } from '../../src/lib/supabase';
 import Papa from 'papaparse';
 
-export async function POST(req: Request) {
+export default async function handler(req: any, res: any) {
+    if (req.method !== 'POST') {
+        return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
     try {
-        const body = await req.json();
-        const { csvContent, userId } = body;
+        const { csvContent, userId } = req.body;
 
         if (!csvContent) {
-            return new Response(
-                JSON.stringify({ error: 'Contenu CSV manquant' }),
-                { status: 400, headers: { 'Content-Type': 'application/json' } }
-            );
+            return res.status(400).json({ error: 'Contenu CSV manquant' });
         }
 
         if (!userId) {
-            return new Response(
-                JSON.stringify({ error: 'UserId manquant' }),
-                { status: 400, headers: { 'Content-Type': 'application/json' } }
-            );
+            return res.status(400).json({ error: 'UserId manquant' });
         }
 
         // Parse CSV
@@ -28,7 +25,6 @@ export async function POST(req: Request) {
         });
 
         const rows = parseResult.data as any[];
-        const headers = parseResult.meta.fields || [];
 
         // Mapping rules
         const mapping = {
@@ -107,7 +103,7 @@ export async function POST(req: Request) {
                 return;
             }
 
-            // Helper for initials (since it's computed in the frontend/base, we should ideally do it here too)
+            // Helper for initials
             const getInitials = (name: string) => {
                 if (!name) return 'C';
                 return name
@@ -120,7 +116,7 @@ export async function POST(req: Request) {
 
             processed.toInsert.push({
                 company_name,
-                contact_name: contact_name || company_name, // Default contact to company name if missing
+                contact_name: contact_name || company_name,
                 email: email || null,
                 phone: phone || null,
                 notes: notes || null,
@@ -141,30 +137,21 @@ export async function POST(req: Request) {
 
             if (insertError) {
                 console.error('Bulk insert error:', insertError);
-                return new Response(
-                    JSON.stringify({ error: 'Erreur lors de l’insertion en base', details: insertError }),
-                    { status: 500, headers: { 'Content-Type': 'application/json' } }
-                );
+                return res.status(500).json({ error: 'Erreur lors de l’insertion en base', details: insertError });
             }
             insertedCount = processed.toInsert.length;
         }
 
-        return new Response(
-            JSON.stringify({
-                ok: true,
-                insertedCount,
-                duplicateCount: processed.duplicateCount,
-                invalidCount: processed.invalidCount,
-                totalCount: processed.totalCount
-            }),
-            { status: 200, headers: { 'Content-Type': 'application/json' } }
-        );
+        return res.status(200).json({
+            ok: true,
+            insertedCount,
+            duplicateCount: processed.duplicateCount,
+            invalidCount: processed.invalidCount,
+            totalCount: processed.totalCount
+        });
 
     } catch (error: any) {
         console.error('Error processing CSV import:', error);
-        return new Response(
-            JSON.stringify({ error: error.message || 'Erreur interne du serveur' }),
-            { status: 500, headers: { 'Content-Type': 'application/json' } }
-        );
+        return res.status(500).json({ error: error.message || 'Erreur interne du serveur' });
     }
 }
