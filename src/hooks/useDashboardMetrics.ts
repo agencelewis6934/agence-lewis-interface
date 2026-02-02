@@ -54,51 +54,69 @@ export function useDashboardMetrics() {
 
                 const totalRevenue = invoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
 
-                const { count: projectCount } = await supabase
-                    .from('projects')
-                    .select('*', { count: 'exact', head: true })
-                    .in('status', ['in_progress', 'planning']);
-
-                const { count: newClientsCount } = await supabase
-                    .from('clients')
-                    .select('*', { count: 'exact', head: true })
-                    .gte('created_at', new Date(new Date().setDate(1)).toISOString()); // This month
-
-                // MRR could be estimated from recurring invoices or fixed for now if no subscription model
-                // For now, let's treat it as 0 if no data
-
-                setKpi({
-                    revenue: totalRevenue,
-                    mrr: 0, // Placeholder or calculate if applicable
-                    activeProjects: projectCount || 0,
-                    newClients: newClientsCount || 0,
-                    revenueGrowth: 0 // Calculate vs last month if needed
-                });
-
-                // 2. Fetch Sales Overview (Projects by Tag/Category)
+                // 2. Fetch Sales Overview (Projects by Status)
                 const { data: projects } = await supabase
                     .from('projects')
-                    .select('tags, budget');
+                    .select('status, price, created_at');
 
-                const categoryMap = new Map<string, number>();
+                // Update Active Projects KPI
+                const activeCount = projects?.filter(p => ['in-progress', 'review'].includes(p.status)).length || 0;
+
+                // Calculate Revenue Growth (Placeholder or actual logic if needed)
+
+                setKpi(prev => ({
+                    ...prev,
+                    revenue: totalRevenue,
+                    activeProjects: activeCount,
+                    newClients: newClientsCount || 0
+                }));
+
+                // Calculate Sales Data based on status instead of missing tags
+                const statusMap = new Map<string, number>();
                 projects?.forEach(p => {
-                    const tag = p.tags?.[0] || 'Other';
-                    const current = categoryMap.get(tag) || 0;
-                    categoryMap.set(tag, current + (p.budget || 0));
+                    const status = p.status === 'in-progress' ? 'En Cours' :
+                        p.status === 'review' ? 'En Révision' :
+                            p.status === 'done' ? 'Terminé' : 'À Faire';
+                    const current = statusMap.get(status) || 0;
+                    statusMap.set(status, current + (Number(p.price) || 0));
                 });
 
                 const colors = ['#E0528B', '#BB8BA6', '#F08BB0', '#333333'];
-                const salesChartData = Array.from(categoryMap.entries()).map(([name, value], idx) => ({
+                const salesChartData = Array.from(statusMap.entries()).map(([name, value], idx) => ({
                     name,
                     value,
                     color: colors[idx % colors.length]
                 }));
 
-                if (salesChartData.length === 0) {
-                    setSalesData([]); // Empty state
-                } else {
-                    setSalesData(salesChartData);
+                setSalesData(salesChartData);
+
+                // 3. Calculate Profit Trend and Total Profit
+                // Filter projects that are NOT in 'todo'
+                const startedProjects = projects?.filter(p => p.status !== 'todo') || [];
+
+                // Group by month for the trend chart
+                const monthlyData = new Map<string, number>();
+                const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+
+                startedProjects.forEach(p => {
+                    const date = new Date(p.created_at);
+                    const monthKey = months[date.getMonth()];
+                    const current = monthlyData.get(monthKey) || 0;
+                    monthlyData.set(monthKey, current + (Number(p.price) || 0));
+                });
+
+                // Get last 6 months for trend
+                const last6Months = [];
+                for (let i = 5; i >= 0; i--) {
+                    const d = new Date();
+                    d.setMonth(d.getMonth() - i);
+                    const monthName = months[d.getMonth()];
+                    last6Months.push({
+                        name: monthName,
+                        profit: monthlyData.get(monthName) || 0
+                    });
                 }
+                setProfitTrend(last6Months);
 
                 // 3. Fetch Top Clients (using analytics_client_ltv view if available, or just clients)
                 // Fallback to clients table if view doesn't exist/work
@@ -119,9 +137,7 @@ export function useDashboardMetrics() {
 
                 setTopClients(formattedClients);
 
-                // 4. Profit Trend (Monthly revenue)
-                // Simplifying to just use invoices aggregated by month for last 6 months
-                setProfitTrend([]); // Leave empty or implement aggregation if time permits
+                // 4. Already handled above with startedProjects
 
             } catch (error) {
                 console.error('Error fetching dashboard metrics:', error);
