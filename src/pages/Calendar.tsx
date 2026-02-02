@@ -12,6 +12,7 @@ import { type CalendarEvent, type CalendarView } from '../types/calendar';
 import { EventModal } from '../components/calendar/EventModal';
 import { toast } from 'sonner';
 import { Calendar as CalendarIcon, Plus, Loader2 } from 'lucide-react';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 
 export function Calendar() {
     const { user } = useAuth();
@@ -22,6 +23,15 @@ export function Calendar() {
     const [showModal, setShowModal] = useState(false);
     const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
     const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{
+        isOpen: boolean;
+        eventId: string | null;
+        eventTitle: string;
+    }>({
+        isOpen: false,
+        eventId: null,
+        eventTitle: '',
+    });
 
     // Fetch events from Supabase
     const fetchEvents = async () => {
@@ -129,6 +139,27 @@ export function Calendar() {
             console.error('[Calendar] Error resizing event:', error);
             toast.error('Erreur lors de la modification');
             info.revert();
+        }
+    };
+
+    // Handle event deletion
+    const handleDeleteEvent = async () => {
+        if (!deleteConfirm.eventId) return;
+
+        try {
+            const { error } = await supabase
+                .from('calendar_events')
+                .delete()
+                .eq('id', deleteConfirm.eventId);
+
+            if (error) throw error;
+
+            toast.success('Événement supprimé');
+            fetchEvents();
+            setDeleteConfirm({ isOpen: false, eventId: null, eventTitle: '' });
+        } catch (error: any) {
+            console.error('[Calendar] Error deleting event:', error);
+            toast.error('Erreur lors de la suppression');
         }
     };
 
@@ -277,8 +308,27 @@ export function Calendar() {
                         setSelectedEvent(null);
                         setSelectedDate(null);
                     }}
+                    onDelete={(event) => {
+                        setDeleteConfirm({
+                            isOpen: true,
+                            eventId: event.id,
+                            eventTitle: event.title,
+                        });
+                        setShowModal(false);
+                    }}
                 />
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, eventId: null, eventTitle: '' })}
+                onConfirm={handleDeleteEvent}
+                title="Supprimer l'événement"
+                message={`Êtes-vous sûr de vouloir supprimer "${deleteConfirm.eventTitle}" ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                destructive={true}
+            />
         </div>
     );
 }

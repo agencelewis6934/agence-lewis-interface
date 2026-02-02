@@ -13,9 +13,10 @@ interface EventModalProps {
     isOpen: boolean;
     onClose: () => void;
     onSave: () => void;
+    onDelete?: (event: CalendarEvent) => void;
 }
 
-export function EventModal({ event, initialDate, isOpen, onClose, onSave }: EventModalProps) {
+export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDelete }: EventModalProps) {
     const { user } = useAuth();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState<EventFormData>({
@@ -136,33 +137,6 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
                 code: error.code
             });
             toast.error(`Erreur: ${error.message || 'Erreur lors de l\'enregistrement'}`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDelete = async () => {
-        if (!event) return;
-
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cet événement ?')) {
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            const { error } = await supabase
-                .from('calendar_events')
-                .delete()
-                .eq('id', event.id);
-
-            if (error) throw error;
-
-            toast.success('Événement supprimé');
-            onSave();
-        } catch (error: any) {
-            console.error('[EventModal] Error deleting event:', error);
-            toast.error('Erreur lors de la suppression');
         } finally {
             setLoading(false);
         }
@@ -322,11 +296,11 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave }: Even
                     {/* Actions */}
                     <div className="flex items-center justify-between pt-4 border-t border-border">
                         <div>
-                            {event && (
+                            {event && onDelete && (
                                 <Button
                                     type="button"
                                     variant="ghost"
-                                    onClick={handleDelete}
+                                    onClick={() => onDelete(event)}
                                     disabled={loading}
                                     className="text-red-500 hover:text-red-400 hover:bg-red-500/10"
                                 >
