@@ -163,21 +163,27 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({ children, on
     const context = React.useContext(DropdownContext);
 
     const handleAction = (e: React.SyntheticEvent) => {
-        console.log('DEBUG: DropdownMenuItem handleAction triggered');
+        console.log(`DEBUG: DropdownMenuItem handleAction triggered for ${e.type}`);
         e.stopPropagation();
 
+        let matched = false;
         if (e.type === 'click' && onClick) {
             onClick(e as React.MouseEvent);
+            matched = true;
         } else if (e.type === 'mousedown' && onMouseDown) {
             onMouseDown(e as React.MouseEvent);
+            matched = true;
         } else if (e.type === 'pointerdown' && onPointerDown) {
             onPointerDown(e as React.PointerEvent);
+            matched = true;
         }
 
-        // Delay closing to ensure the primary action starts executing
-        setTimeout(() => {
-            context?.close();
-        }, 50);
+        // Only close if we actually handled the action
+        if (matched) {
+            setTimeout(() => {
+                context?.close();
+            }, 50);
+        }
     };
 
     return (
