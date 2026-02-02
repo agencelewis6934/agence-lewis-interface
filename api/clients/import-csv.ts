@@ -6,6 +6,11 @@ export default async function handler(req: any, res: any) {
         return res.status(405).json({ error: 'Method Not Allowed' });
     }
 
+    if (!supabase) {
+        console.error('Supabase client not initialized in handler');
+        return res.status(500).json({ error: 'Server Configuration Error: Missing Supabase Environment Variables' });
+    }
+
     try {
         const { csvContent, userId } = req.body;
 
