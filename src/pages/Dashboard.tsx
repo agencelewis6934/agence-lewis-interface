@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, FolderGit2, Activity, Calendar } from 'lucide-react';
+import { TrendingUp, FolderGit2, Activity, Calendar, CheckCircle2 } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { KpiCard } from '../components/dashboard/KpiCard';
 import { SalesOverviewChart } from '../components/dashboard/SalesOverviewChart';
@@ -16,8 +16,6 @@ export const Dashboard: React.FC = () => {
         return <div className="p-8 text-center text-text-muted">Chargement du tableau de bord...</div>;
     }
 
-    // Determine trend types based on data (mock logic or real)
-    const revenueTrendType = kpi.revenueGrowth >= 0 ? 'up' : 'down';
 
     return (
         <div className="space-y-8 pb-12">
@@ -48,12 +46,11 @@ export const Dashboard: React.FC = () => {
             {/* Top KPI Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
-                    title="Revenu Net"
-                    value={kpi.revenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
-                    trend={kpi.revenueGrowth ? `${kpi.revenueGrowth}%` : undefined}
-                    trendType={revenueTrendType}
-                    icon={<WalletIcon size={20} />}
-                    subtitle="vs mois dernier"
+                    title="Projets Terminés"
+                    value={kpi.completedRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
+                    trendType="up"
+                    icon={<CheckCircle2 size={20} />}
+                    subtitle="Valeur des projets terminés"
                     delay={0.1}
                 />
                 <KpiCard
@@ -151,19 +148,6 @@ export const Dashboard: React.FC = () => {
 };
 
 // Internal icon component
-const WalletIcon = ({ size }: { size: number }) => (
-    <svg
-        xmlns="http://www.w3.org/2000/svg"
-        width={size}
-        height={size}
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-    >
-        <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1" />
-        <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4" />
-    </svg>
-);
+// const WalletIcon = ({ size }: { size: number }) => (
+//     <svg ...
+// );
