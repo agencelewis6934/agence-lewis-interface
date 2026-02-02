@@ -20,11 +20,11 @@ export const Sidebar: React.FC = () => {
 
     return (
         <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col border-r border-border bg-surface p-6 text-text-main">
-            <div className="mb-10 flex items-center">
+            <div className="mb-10 flex items-center justify-center">
                 <img
                     src="/logo.png"
                     alt="Agence Lewis Logo"
-                    className="h-12 w-auto object-contain"
+                    className="h-20 w-full object-contain"
                 />
             </div>
 
