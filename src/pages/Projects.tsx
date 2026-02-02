@@ -75,7 +75,6 @@ function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (
                                 destructive
                                 icon={<Trash2 className="h-4 w-4" />}
                                 onMouseDown={() => {
-                                    console.log('DEBUG: Delete project button fired (onMouseDown)');
                                     onDelete(project.id);
                                 }}
                             >
@@ -189,8 +188,6 @@ export function Projects() {
     };
 
     const handleDeleteProject = async (id: string) => {
-        console.log('DEBUG: handleDeleteProject triggered for id:', id);
-        toast.info('Traitement de la suppression...');
         if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
 
         try {
@@ -519,7 +516,6 @@ export function Projects() {
                                                                 destructive
                                                                 icon={<Trash2 className="h-4 w-4" />}
                                                                 onMouseDown={() => {
-                                                                    console.log('DEBUG: Delete project list button fired (onMouseDown)');
                                                                     handleDeleteProject(project.id);
                                                                 }}
                                                             >

@@ -75,7 +75,6 @@ function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: strin
                                 destructive
                                 icon={<Trash2 className="h-4 w-4" />}
                                 onMouseDown={() => {
-                                    console.log('DEBUG: Delete task button fired (onMouseDown)');
                                     onDelete(task.id);
                                 }}
                             >
@@ -209,8 +208,6 @@ export function Tasks() {
     };
 
     const handleDeleteTask = async (id: string) => {
-        console.log('DEBUG: handleDeleteTask triggered for id:', id);
-        toast.info('Traitement de la suppression...');
         if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return;
 
         try {
@@ -524,7 +521,6 @@ export function Tasks() {
                                                                 destructive
                                                                 icon={<Trash2 className="h-4 w-4" />}
                                                                 onMouseDown={() => {
-                                                                    console.log('DEBUG: Delete task list button fired (onMouseDown)');
                                                                     handleDeleteTask(task.id);
                                                                 }}
                                                             >
