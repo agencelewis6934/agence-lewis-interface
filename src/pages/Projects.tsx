@@ -71,19 +71,16 @@ function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
-                            <div onPointerDown={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem
-                                    destructive
-                                    icon={<Trash2 className="h-4 w-4" />}
-                                    onClick={() => {
-                                        console.log('DEBUG: Delete project button clicked');
-                                        toast.info('Suppression demandée...');
-                                        onDelete(project.id);
-                                    }}
-                                >
-                                    Supprimer
-                                </DropdownMenuItem>
-                            </div>
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onMouseDown={() => {
+                                    console.log('DEBUG: Delete project button fired (onMouseDown)');
+                                    onDelete(project.id);
+                                }}
+                            >
+                                Supprimer
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -518,19 +515,16 @@ export function Projects() {
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
-                                                            <div onPointerDown={(e) => e.stopPropagation()}>
-                                                                <DropdownMenuItem
-                                                                    destructive
-                                                                    icon={<Trash2 className="h-4 w-4" />}
-                                                                    onClick={() => {
-                                                                        console.log('DEBUG: Delete project list button clicked');
-                                                                        toast.info('Suppression demandée (list)...');
-                                                                        handleDeleteProject(project.id);
-                                                                    }}
-                                                                >
-                                                                    Supprimer
-                                                                </DropdownMenuItem>
-                                                            </div>
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onMouseDown={() => {
+                                                                    console.log('DEBUG: Delete project list button fired (onMouseDown)');
+                                                                    handleDeleteProject(project.id);
+                                                                }}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>

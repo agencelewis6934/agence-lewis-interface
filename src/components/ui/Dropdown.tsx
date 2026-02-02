@@ -25,6 +25,8 @@ interface DropdownMenuContentProps {
 interface DropdownMenuItemProps {
     children: ReactNode;
     onClick?: (e: React.MouseEvent) => void;
+    onMouseDown?: (e: React.MouseEvent) => void;
+    onPointerDown?: (e: React.PointerEvent) => void;
     className?: string;
     destructive?: boolean;
     icon?: ReactNode;
@@ -157,19 +159,35 @@ export const DropdownMenuContent: React.FC<DropdownMenuContentProps> = ({ childr
     );
 };
 
-export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({ children, onClick, className, destructive, icon }) => {
+export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({ children, onClick, onMouseDown, onPointerDown, className, destructive, icon }) => {
     const context = React.useContext(DropdownContext);
+
+    const handleAction = (e: React.SyntheticEvent) => {
+        console.log('DEBUG: DropdownMenuItem handleAction triggered');
+        e.stopPropagation();
+
+        if (e.type === 'click' && onClick) {
+            onClick(e as React.MouseEvent);
+        } else if (e.type === 'mousedown' && onMouseDown) {
+            onMouseDown(e as React.MouseEvent);
+        } else if (e.type === 'pointerdown' && onPointerDown) {
+            onPointerDown(e as React.PointerEvent);
+        }
+
+        // Delay closing to ensure the primary action starts executing
+        setTimeout(() => {
+            context?.close();
+        }, 50);
+    };
 
     return (
         <button
-            onClick={(e) => {
-                e.stopPropagation();
-                onClick?.(e);
-                context?.close();
-            }}
+            onClick={onClick ? handleAction : undefined}
+            onMouseDown={onMouseDown ? handleAction : undefined}
+            onPointerDown={onPointerDown ? handleAction : undefined}
             className={cn(
                 "w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors",
-                "hover:bg-white/5 focus:bg-white/5 focus:outline-none",
+                "hover:bg-white/5 focus:bg-white/5 focus:outline-none text-left",
                 destructive
                     ? "text-red-500 hover:text-red-400 hover:bg-red-500/10 focus:bg-red-500/10"
                     : "text-text-main hover:text-white",
@@ -177,7 +195,7 @@ export const DropdownMenuItem: React.FC<DropdownMenuItemProps> = ({ children, on
             )}
         >
             {icon && <span className="mr-2 h-4 w-4 opacity-70">{icon}</span>}
-            {children}
+            <span className="truncate">{children}</span>
         </button>
     );
 };

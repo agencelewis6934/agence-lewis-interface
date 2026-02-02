@@ -71,19 +71,16 @@ function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: strin
                                 Modifier
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
-                            <div onPointerDown={(e) => e.stopPropagation()}>
-                                <DropdownMenuItem
-                                    destructive
-                                    icon={<Trash2 className="h-4 w-4" />}
-                                    onClick={() => {
-                                        console.log('DEBUG: Delete task button clicked');
-                                        toast.info('Suppression demandée...');
-                                        onDelete(task.id);
-                                    }}
-                                >
-                                    Supprimer
-                                </DropdownMenuItem>
-                            </div>
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onMouseDown={() => {
+                                    console.log('DEBUG: Delete task button fired (onMouseDown)');
+                                    onDelete(task.id);
+                                }}
+                            >
+                                Supprimer
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </div>
@@ -523,19 +520,16 @@ export function Tasks() {
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
-                                                            <div onPointerDown={(e) => e.stopPropagation()}>
-                                                                <DropdownMenuItem
-                                                                    destructive
-                                                                    icon={<Trash2 className="h-4 w-4" />}
-                                                                    onClick={() => {
-                                                                        console.log('DEBUG: Delete task list button clicked');
-                                                                        toast.info('Suppression demandée (list)...');
-                                                                        handleDeleteTask(task.id);
-                                                                    }}
-                                                                >
-                                                                    Supprimer
-                                                                </DropdownMenuItem>
-                                                            </div>
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onMouseDown={() => {
+                                                                    console.log('DEBUG: Delete task list button fired (onMouseDown)');
+                                                                    handleDeleteTask(task.id);
+                                                                }}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
