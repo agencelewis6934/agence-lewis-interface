@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateTaskModal } from '../components/tasks/CreateTaskModal';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
     DndContext,
     DragOverlay,
@@ -32,7 +33,7 @@ const columns = [
 ];
 
 // Draggable Task Card Component
-function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: string) => void }) {
+function DraggableTaskCard({ task, setDeleteConfirm }: { task: any; setDeleteConfirm: (value: { isOpen: boolean; taskId: string | null; taskTitle: string }) => void }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: task.id,
         data: { task },
@@ -69,6 +70,14 @@ function DraggableTaskCard({ task, onDelete }: { task: any; onDelete: (id: strin
                             </DropdownMenuItem>
                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                 Modifier
+                            </DropdownMenuItem>
+                            <div className="h-px bg-border-subtle my-1" />
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onClick={() => setDeleteConfirm({ isOpen: true, taskId: task.id, taskTitle: task.title })}
+                            >
+                                Supprimer
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -131,6 +140,7 @@ export function Tasks() {
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; taskId: string | null; taskTitle: string }>({ isOpen: false, taskId: null, taskTitle: '' });
 
     // Configure drag sensors
     const sensors = useSensors(
@@ -197,19 +207,20 @@ export function Tasks() {
         }
     };
 
-    const handleDeleteTask = async (id: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer cette tâche ?')) return;
+    const handleDeleteTask = async () => {
+        if (!deleteConfirm.taskId) return;
 
         try {
             const { error } = await supabase
                 .from('tasks')
                 .delete()
-                .eq('id', id);
+                .eq('id', deleteConfirm.taskId);
 
             if (error) throw error;
 
-            toast.success('Tâche supprimée');
+            toast.success('Tâche supprimée avec succès');
             loadTasks();
+            setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' });
         } catch (error: any) {
             console.error('Error deleting task:', error);
             toast.error('Erreur lors de la suppression');
@@ -386,7 +397,7 @@ export function Tasks() {
                                                             <DraggableTaskCard
                                                                 key={task.id}
                                                                 task={task}
-                                                                onDelete={handleDeleteTask}
+                                                                setDeleteConfirm={setDeleteConfirm}
                                                             />
                                                         ))}
                                                     </div>
@@ -506,6 +517,14 @@ export function Tasks() {
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                                                 Modifier
                                                             </DropdownMenuItem>
+                                                            <div className="h-px bg-border-subtle my-1" />
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => setDeleteConfirm({ isOpen: true, taskId: task.id, taskTitle: task.title })}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
@@ -518,6 +537,18 @@ export function Tasks() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, taskId: null, taskTitle: '' })}
+                onConfirm={handleDeleteTask}
+                title="Supprimer la tâche"
+                message={`Êtes-vous sûr de vouloir supprimer la tâche "${deleteConfirm.taskTitle}" ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                destructive
+            />
 
             {/* Loading State */}
             {loading && (

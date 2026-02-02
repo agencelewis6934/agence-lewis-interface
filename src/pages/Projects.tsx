@@ -10,6 +10,7 @@ import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateProjectModal } from '../components/projects/CreateProjectModal';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import {
     DndContext,
     DragOverlay,
@@ -32,7 +33,7 @@ const columns = [
 ];
 
 // Draggable Project Card Component
-function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (id: string) => void }) {
+function DraggableProjectCard({ project, setDeleteConfirm }: { project: any; setDeleteConfirm: (value: { isOpen: boolean; projectId: string | null; projectName: string }) => void }) {
     const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: project.id,
         data: { project },
@@ -69,6 +70,14 @@ function DraggableProjectCard({ project, onDelete }: { project: any; onDelete: (
                             </DropdownMenuItem>
                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                 Modifier
+                            </DropdownMenuItem>
+                            <div className="h-px bg-border-subtle my-1" />
+                            <DropdownMenuItem
+                                destructive
+                                icon={<Trash2 className="h-4 w-4" />}
+                                onClick={() => setDeleteConfirm({ isOpen: true, projectId: project.id, projectName: project.name })}
+                            >
+                                Supprimer
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -126,6 +135,7 @@ export function Projects() {
     const [filterPriority, setFilterPriority] = useState('all');
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
     const [activeId, setActiveId] = useState<string | null>(null);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; projectId: string | null; projectName: string }>({ isOpen: false, projectId: null, projectName: '' });
 
     const filteredProjects = useMemo(() => {
         return projects.filter((p: any) => {
@@ -177,17 +187,17 @@ export function Projects() {
         }
     };
 
-    const handleDeleteProject = async (id: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) return;
+    const handleDeleteProject = async () => {
+        if (!deleteConfirm.projectId) return;
 
         try {
             // Get project name for calendar event cleanup
-            const project = projects.find(p => p.id === id);
+            const project = projects.find(p => p.id === deleteConfirm.projectId);
 
             const { error } = await supabase
                 .from('projects')
                 .delete()
-                .eq('id', id);
+                .eq('id', deleteConfirm.projectId);
 
             if (error) throw error;
 
@@ -198,8 +208,9 @@ export function Projects() {
                     .eq('title', `Deadline: ${project.name}`);
             }
 
-            toast.success('Projet supprimé');
+            toast.success('Projet supprimé avec succès');
             loadProjects();
+            setDeleteConfirm({ isOpen: false, projectId: null, projectName: '' });
         } catch (error: any) {
             console.error('Error deleting project:', error);
             toast.error('Erreur lors de la suppression');
@@ -401,7 +412,7 @@ export function Projects() {
                                                             <DraggableProjectCard
                                                                 key={project.id}
                                                                 project={project}
-                                                                onDelete={handleDeleteProject}
+                                                                setDeleteConfirm={setDeleteConfirm}
                                                             />
                                                         ))}
                                                     </div>
@@ -501,6 +512,14 @@ export function Projects() {
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                                                 Modifier
                                                             </DropdownMenuItem>
+                                                            <div className="h-px bg-border-subtle my-1" />
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => setDeleteConfirm({ isOpen: true, projectId: project.id, projectName: project.name })}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
@@ -513,6 +532,18 @@ export function Projects() {
                     </CardContent>
                 </Card>
             )}
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, projectId: null, projectName: '' })}
+                onConfirm={handleDeleteProject}
+                title="Supprimer le projet"
+                message={`Êtes-vous sûr de vouloir supprimer le projet "${deleteConfirm.projectName}" ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                destructive
+            />
 
             {/* Loading State */}
             {loading && (

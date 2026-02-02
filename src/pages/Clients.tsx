@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Search, Plus, Filter, MoreHorizontal, Mail, Phone, TrendingUp, Sparkles, Eye, Pencil, Trash2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '../components/ui/Dropdown';
+import { ConfirmDialog } from '../components/ui/ConfirmDialog';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
@@ -16,6 +17,7 @@ export function Clients() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; clientId: string | null; clientName: string }>({ isOpen: false, clientId: null, clientName: '' });
 
     useEffect(() => {
         loadClients();
@@ -61,18 +63,19 @@ export function Clients() {
         ];
     }, [clients]);
 
-    const handleDeleteClient = async (id: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce client ?')) return;
+    const handleDeleteClient = async () => {
+        if (!deleteConfirm.clientId) return;
 
         try {
             const { error } = await supabase
                 .from('clients')
                 .delete()
-                .eq('id', id);
+                .eq('id', deleteConfirm.clientId);
 
             if (error) throw error;
-            toast.success('Client supprimé');
+            toast.success('Client supprimé avec succès');
             loadClients();
+            setDeleteConfirm({ isOpen: false, clientId: null, clientName: '' });
         } catch (error: any) {
             toast.error('Erreur lors de la suppression');
         }
@@ -269,6 +272,14 @@ export function Clients() {
                                                             <DropdownMenuItem icon={<Pencil className="h-4 w-4" />} onClick={() => toast.info('Modification bientôt disponible')}>
                                                                 Modifier
                                                             </DropdownMenuItem>
+                                                            <div className="h-px bg-border-subtle my-1" />
+                                                            <DropdownMenuItem
+                                                                destructive
+                                                                icon={<Trash2 className="h-4 w-4" />}
+                                                                onClick={() => setDeleteConfirm({ isOpen: true, clientId: client.id, clientName: client.name })}
+                                                            >
+                                                                Supprimer
+                                                            </DropdownMenuItem>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </td>
@@ -286,6 +297,18 @@ export function Clients() {
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 onSuccess={loadClients}
+            />
+
+            {/* Delete Confirmation Dialog */}
+            <ConfirmDialog
+                isOpen={deleteConfirm.isOpen}
+                onClose={() => setDeleteConfirm({ isOpen: false, clientId: null, clientName: '' })}
+                onConfirm={handleDeleteClient}
+                title="Supprimer le client"
+                message={`Êtes-vous sûr de vouloir supprimer le client "${deleteConfirm.clientName}" ? Cette action est irréversible.`}
+                confirmText="Supprimer"
+                cancelText="Annuler"
+                destructive
             />
         </div>
     );
