@@ -66,6 +66,7 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
             const { data, error } = await supabase
                 .from('clients')
                 .select('*')
+                .eq('status', 'active')
                 .order('contact_name');
 
             if (error) throw error;
