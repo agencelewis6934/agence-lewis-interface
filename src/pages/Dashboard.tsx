@@ -57,12 +57,11 @@ export const Dashboard: React.FC = () => {
                     delay={0.1}
                 />
                 <KpiCard
-                    title="MRR"
-                    value={kpi.mrr.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
-                    trend="+0%"
+                    title="Revenu Potentiel"
+                    value={kpi.potentialRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                     trendType="up"
                     icon={<TrendingUp size={20} />}
-                    subtitle="Revenu Récurrent"
+                    subtitle="Total des projets (payés ou non)"
                     delay={0.2}
                 />
                 <KpiCard

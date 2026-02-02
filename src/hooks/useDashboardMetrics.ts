@@ -4,6 +4,7 @@ import { supabase } from '../lib/supabase';
 type KpiData = {
     revenue: number;
     mrr: number;
+    potentialRevenue: number;
     activeProjects: number;
     newClients: number;
     revenueGrowth: number;
@@ -33,6 +34,7 @@ export function useDashboardMetrics() {
     const [kpi, setKpi] = useState<KpiData>({
         revenue: 0,
         mrr: 0,
+        potentialRevenue: 0,
         activeProjects: 0,
         newClients: 0,
         revenueGrowth: 0
@@ -58,6 +60,9 @@ export function useDashboardMetrics() {
                     .from('projects')
                     .select('status, price, created_at, is_paid');
 
+                // Calculate Potential Revenue (Sum of ALL project prices)
+                const totalPotentialRevenue = projects?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0;
+
                 // Update Active Projects KPI
                 const activeCount = projects?.filter(p => ['in-progress', 'review'].includes(p.status)).length || 0;
 
@@ -71,6 +76,7 @@ export function useDashboardMetrics() {
                 setKpi(prev => ({
                     ...prev,
                     revenue: totalRevenue,
+                    potentialRevenue: totalPotentialRevenue,
                     activeProjects: activeCount,
                     newClients: newClientsCount || 0
                 }));
