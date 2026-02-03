@@ -29,6 +29,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
         price: '',
         deadline: '',
         is_paid: false,
+        payment_status: 'unpaid', // unpaid, deposit_paid, paid
+        deposit_amount: '',
         // Client fields
         existingClientId: '',
         newClientName: '',
@@ -50,6 +52,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                     price: projectData.price?.toString() || '',
                     deadline: projectData.deadline || '',
                     is_paid: projectData.is_paid || false,
+                    payment_status: projectData.payment_status || (projectData.is_paid ? 'paid' : 'unpaid'),
+                    deposit_amount: projectData.deposit_amount?.toString() || '',
                     existingClientId: projectData.client_id || '',
                     newClientName: '',
                     newClientCompany: '',
@@ -133,7 +137,9 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                         price: formData.price ? parseFloat(formData.price) : null,
                         description: formData.description,
                         deadline: formData.deadline || null,
-                        is_paid: formData.is_paid,
+                        is_paid: formData.payment_status === 'paid',
+                        payment_status: formData.payment_status,
+                        deposit_amount: formData.deposit_amount ? parseFloat(formData.deposit_amount) : 0,
                     })
                     .eq('id', projectData.id);
 
@@ -173,7 +179,9 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                         price: formData.price ? parseFloat(formData.price) : null,
                         description: formData.description,
                         deadline: formData.deadline || null,
-                        is_paid: formData.is_paid,
+                        is_paid: formData.payment_status === 'paid',
+                        payment_status: formData.payment_status,
+                        deposit_amount: formData.deposit_amount ? parseFloat(formData.deposit_amount) : 0,
                         user_id: user.id,
                     })
                     .select()
@@ -216,6 +224,8 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
             price: '',
             deadline: '',
             is_paid: false,
+            payment_status: 'unpaid',
+            deposit_amount: '',
             existingClientId: '',
             newClientName: '',
             newClientCompany: '',
@@ -341,34 +351,70 @@ export function CreateProjectModal({ isOpen, onClose, onSuccess, editMode = fals
                                             />
                                         </div>
 
+                                        {/* Acompte Field - Only show if not fully paid */}
+                                        {formData.payment_status !== 'paid' && (
+                                            <Input
+                                                label="Montant de l'acompte (€)"
+                                                type="number"
+                                                step="0.01"
+                                                placeholder="0.00"
+                                                leftIcon={<Euro className="h-4 w-4" />}
+                                                value={formData.deposit_amount}
+                                                onChange={(e) => setFormData({ ...formData, deposit_amount: e.target.value })}
+                                            />
+                                        )}
+
                                         <div className="flex items-center justify-between p-4 bg-surface-elevated/50 border border-border rounded-xl">
                                             <div className="flex items-center gap-3">
                                                 <div className={cn(
                                                     "w-10 h-10 rounded-full flex items-center justify-center",
-                                                    formData.is_paid ? "bg-emerald-500/10 text-emerald-500" : "bg-primary/10 text-primary"
+                                                    formData.payment_status === 'paid' ? "bg-emerald-500/10 text-emerald-500" :
+                                                        formData.payment_status === 'deposit_paid' ? "bg-yellow-500/10 text-yellow-500" :
+                                                            "bg-primary/10 text-primary"
                                                 )}>
                                                     <Euro className="h-5 w-5" />
                                                 </div>
                                                 <div>
                                                     <p className="font-medium text-white">Statut du Paiement</p>
-                                                    <p className="text-xs text-text-muted">{formData.is_paid ? 'Projet payé (comptabilisé dans le profit)' : 'Projet non payé (masqué des métriques)'}</p>
+                                                    <p className="text-xs text-text-muted">
+                                                        {formData.payment_status === 'paid' ? 'Payé intégralement' :
+                                                            formData.payment_status === 'deposit_paid' ? 'Acompte payé' :
+                                                                'Non payé'}
+                                                    </p>
                                                 </div>
                                             </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => setFormData({ ...formData, is_paid: !formData.is_paid })}
-                                                className={cn(
-                                                    "relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none",
-                                                    formData.is_paid ? "bg-emerald-500" : "bg-border"
-                                                )}
-                                            >
-                                                <span
+                                            <div className="flex bg-surface-elevated rounded-lg p-1 border border-border">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, payment_status: 'unpaid' })}
                                                     className={cn(
-                                                        "inline-block h-4 w-4 transform rounded-full bg-white transition-transform",
-                                                        formData.is_paid ? "translate-x-6" : "translate-x-1"
+                                                        "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                                                        formData.payment_status === 'unpaid' ? "bg-red-500/20 text-red-500" : "text-text-muted hover:text-white"
                                                     )}
-                                                />
-                                            </button>
+                                                >
+                                                    Non payé
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, payment_status: 'deposit_paid' })}
+                                                    className={cn(
+                                                        "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                                                        formData.payment_status === 'deposit_paid' ? "bg-yellow-500/20 text-yellow-500" : "text-text-muted hover:text-white"
+                                                    )}
+                                                >
+                                                    Acompte
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setFormData({ ...formData, payment_status: 'paid' })}
+                                                    className={cn(
+                                                        "px-3 py-1.5 rounded-md text-xs font-medium transition-all",
+                                                        formData.payment_status === 'paid' ? "bg-emerald-500/20 text-emerald-500" : "text-text-muted hover:text-white"
+                                                    )}
+                                                >
+                                                    Payé
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
 

@@ -85,10 +85,12 @@ function DraggableProjectCard({
                                 Modifier
                             </DropdownMenuItem>
                             <DropdownMenuItem
-                                icon={project.is_paid ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                icon={project.payment_status === 'paid' ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                                 onClick={() => onTogglePayment(project)}
                             >
-                                {project.is_paid ? 'Marquer comme non payé' : 'Marquer comme payé'}
+                                {project.payment_status === 'paid' ? 'Marquer comme non payé' :
+                                    project.payment_status === 'deposit_paid' ? 'Marquer comme payé' :
+                                        'Marquer comme acompte payé'}
                             </DropdownMenuItem>
                             <div className="h-px bg-border-subtle my-1" />
                             <DropdownMenuItem
@@ -125,10 +127,16 @@ function DraggableProjectCard({
                         project.priority === 'medium' ? 'Moyenne' : 'Basse'}
                 </Badge>
             )}
-            {project.is_paid && (
+            {(project.payment_status === 'paid' || project.is_paid) && (
                 <div className="absolute top-4 right-10 flex items-center gap-1.5 px-2 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
                     <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-medium text-emerald-500 uppercase tracking-wider">Payé</span>
+                </div>
+            )}
+            {project.payment_status === 'deposit_paid' && (
+                <div className="absolute top-4 right-10 flex items-center gap-1.5 px-2 py-1 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <CheckCircle2 className="h-3 w-3 text-yellow-500" />
+                    <span className="text-[10px] font-medium text-yellow-500 uppercase tracking-wider">Acompte</span>
                 </div>
             )}
         </motion.div>
@@ -216,14 +224,23 @@ export function Projects() {
 
     const handleTogglePayment = async (project: any) => {
         try {
+            // Cycle: null/unpaid -> deposit_paid -> paid -> unpaid
+            let newStatus = 'unpaid';
+            if (!project.payment_status || project.payment_status === 'unpaid') newStatus = 'deposit_paid';
+            else if (project.payment_status === 'deposit_paid') newStatus = 'paid';
+            else if (project.payment_status === 'paid') newStatus = 'unpaid';
+
             const { error } = await supabase
                 .from('projects')
-                .update({ is_paid: !project.is_paid })
+                .update({
+                    payment_status: newStatus,
+                    is_paid: newStatus === 'paid' // Keep sync for now
+                })
                 .eq('id', project.id);
 
             if (error) throw error;
 
-            toast.success(project.is_paid ? 'Projet marqué comme non payé' : 'Projet marqué comme payé');
+            toast.success(`Statut de paiement mis à jour : ${newStatus === 'paid' ? 'Payé' : newStatus === 'deposit_paid' ? 'Acompte' : 'Non payé'}`);
             loadProjects();
         } catch (error: any) {
             console.error('Error toggling payment status:', error);
@@ -523,10 +540,16 @@ export function Projects() {
                                                 <td className="px-6 py-4">
                                                     <div className="flex items-center gap-3">
                                                         <p className="font-semibold text-white">{project.name}</p>
-                                                        {project.is_paid && (
+                                                        {(project.payment_status === 'paid' || project.is_paid) && (
                                                             <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-emerald-500/10 border border-emerald-500/20 rounded-md">
                                                                 <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" />
                                                                 <span className="text-[9px] font-bold text-emerald-500 uppercase tracking-wider">Payé</span>
+                                                            </div>
+                                                        )}
+                                                        {project.payment_status === 'deposit_paid' && (
+                                                            <div className="flex items-center gap-1.5 px-1.5 py-0.5 bg-yellow-500/10 border border-yellow-500/20 rounded-md">
+                                                                <CheckCircle2 className="h-2.5 w-2.5 text-yellow-500" />
+                                                                <span className="text-[9px] font-bold text-yellow-500 uppercase tracking-wider">Acompte</span>
                                                             </div>
                                                         )}
                                                     </div>
@@ -568,10 +591,12 @@ export function Projects() {
                                                                 Modifier
                                                             </DropdownMenuItem>
                                                             <DropdownMenuItem
-                                                                icon={project.is_paid ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                                                                icon={project.payment_status === 'paid' ? <Circle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
                                                                 onClick={() => handleTogglePayment(project)}
                                                             >
-                                                                {project.is_paid ? 'Marquer comme non payé' : 'Marquer comme payé'}
+                                                                {project.payment_status === 'paid' ? 'Marquer comme non payé' :
+                                                                    project.payment_status === 'deposit_paid' ? 'Marquer comme payé' :
+                                                                        'Marquer comme acompte payé'}
                                                             </DropdownMenuItem>
                                                             <div className="h-px bg-border-subtle my-1" />
                                                             <DropdownMenuItem

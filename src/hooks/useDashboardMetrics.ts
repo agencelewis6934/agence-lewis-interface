@@ -49,18 +49,21 @@ export function useDashboardMetrics() {
     useEffect(() => {
         async function fetchMetrics() {
             try {
-                // 1. Fetch KPI Data
-                const { data: invoices } = await supabase
-                    .from('invoices')
-                    .select('amount, created_at')
-                    .eq('status', 'paid');
 
-                const totalRevenue = invoices?.reduce((sum, inv) => sum + (inv.amount || 0), 0) || 0;
-
-                // 2. Fetch Sales Overview (Projects by Payment Status)
+                // 1. Fetch Sales Overview (Projects by Payment Status)
                 const { data: projects } = await supabase
                     .from('projects')
-                    .select('status, price, created_at, is_paid');
+                    .select('status, price, created_at, is_paid, payment_status, deposit_amount');
+
+                // Calculate Revenue based on Project Payment Status
+                const totalRevenue = projects?.reduce((sum, p) => {
+                    if (p.payment_status === 'paid') {
+                        return sum + (Number(p.price) || 0);
+                    } else if (p.payment_status === 'deposit_paid') {
+                        return sum + (Number(p.deposit_amount) || 0);
+                    }
+                    return sum;
+                }, 0) || 0;
 
                 // Calculate Potential Revenue (Sum of ALL project prices)
                 const totalPotentialRevenue = projects?.reduce((sum, p) => sum + (Number(p.price) || 0), 0) || 0;
