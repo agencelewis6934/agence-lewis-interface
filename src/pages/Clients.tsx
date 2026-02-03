@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
+import { Select } from '../components/ui/Select';
 import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
@@ -24,7 +25,7 @@ export function Clients() {
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; clientId: string | null; clientName: string }>({ isOpen: false, clientId: null, clientName: '' });
     const [viewModal, setViewModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
     const [editModal, setEditModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
-    const [contactFilter, setContactFilter] = useState(false);
+    const [contactFilterType, setContactFilterType] = useState<'all' | 'email_phone' | 'email_only' | 'phone_only'>('all');
     const [statusFilter, setStatusFilter] = useState<'prospect' | 'active' | 'inactive' | null>(null);
 
     useEffect(() => {
@@ -55,12 +56,20 @@ export function Clients() {
                 (client.company_name && client.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
                 (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            const matchesContact = !contactFilter || (client.phone || client.email);
+            let matchesContact = true;
+            if (contactFilterType === 'email_phone') {
+                matchesContact = client.email && client.phone;
+            } else if (contactFilterType === 'email_only') {
+                matchesContact = client.email && !client.phone;
+            } else if (contactFilterType === 'phone_only') {
+                matchesContact = client.phone && !client.email;
+            }
+
             const matchesStatus = !statusFilter || client.status === statusFilter;
 
             return matchesSearch && matchesContact && matchesStatus;
         });
-    }, [clients, searchQuery, contactFilter, statusFilter]);
+    }, [clients, searchQuery, contactFilterType, statusFilter]);
 
     const pipeline = useMemo(() => {
         const counts = {
@@ -193,17 +202,18 @@ export function Clients() {
                                 />
                             </div>
 
-                            <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-xl cursor-pointer select-none hover:border-primary/50 transition-colors"
-                                onClick={() => setContactFilter(!contactFilter)}>
-                                <div className={cn(
-                                    "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                                    contactFilter ? "bg-primary border-primary" : "border-text-muted"
-                                )}>
-                                    {contactFilter && <User className="h-3 w-3 text-white" />}
-                                </div>
-                                <span className={cn("text-sm font-medium", contactFilter ? "text-white" : "text-text-muted")}>
-                                    Contactables uniquement
-                                </span>
+                            <div className="w-64">
+                                <Select
+                                    value={contactFilterType}
+                                    onChange={(value) => setContactFilterType(value as any)}
+                                    options={[
+                                        { value: 'all', label: 'Tous les contacts' },
+                                        { value: 'email_phone', label: 'Email & Téléphone' },
+                                        { value: 'email_only', label: 'Email uniquement' },
+                                        { value: 'phone_only', label: 'Téléphone uniquement' },
+                                    ]}
+                                    className="w-full"
+                                />
                             </div>
                         </div>
                         <p className="text-sm text-text-subtle font-medium">{filteredClients.length} clients trouvés</p>
