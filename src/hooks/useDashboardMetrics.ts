@@ -92,14 +92,23 @@ export function useDashboardMetrics() {
                     newClients: newClientsCount || 0
                 }));
 
-                // Calculate Sales Data based on PAID projects
+                // Calculate Sales Data based on PAID projects (Full or Deposit)
                 const statusMap = new Map<string, number>();
-                projects?.filter(p => p.is_paid).forEach(p => {
-                    const status = p.status === 'in-progress' ? 'En Cours' :
-                        p.status === 'review' ? 'En Révision' :
-                            p.status === 'done' ? 'Terminé' : 'À Faire';
-                    const current = statusMap.get(status) || 0;
-                    statusMap.set(status, current + (Number(p.price) || 0));
+                projects?.forEach(p => {
+                    if (p.payment_status === 'unpaid' && !p.is_paid) return; // Skip unpaid
+
+                    let amount = 0;
+                    if (p.payment_status === 'paid') amount = Number(p.price) || 0;
+                    else if (p.payment_status === 'deposit_paid') amount = Number(p.deposit_amount) || 0;
+                    else if (p.is_paid) amount = Number(p.price) || 0; // Fallback for legacy
+
+                    if (amount > 0) {
+                        const status = p.status === 'in-progress' ? 'En Cours' :
+                            p.status === 'review' ? 'En Révision' :
+                                p.status === 'done' ? 'Terminé' : 'À Faire';
+                        const current = statusMap.get(status) || 0;
+                        statusMap.set(status, current + amount);
+                    }
                 });
 
                 const colors = ['#E0528B', '#BB8BA6', '#F08BB0', '#333333'];
@@ -112,18 +121,22 @@ export function useDashboardMetrics() {
                 setSalesData(salesChartData);
 
                 // 3. Calculate Profit Trend and Total Profit
-                // Filter projects that ARE marked as PAID
-                const paidProjects = projects?.filter(p => p.is_paid) || [];
-
                 // Group by month for the trend chart
                 const monthlyData = new Map<string, number>();
                 const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
 
-                paidProjects.forEach(p => {
-                    const date = new Date(p.created_at);
-                    const monthKey = months[date.getMonth()];
-                    const current = monthlyData.get(monthKey) || 0;
-                    monthlyData.set(monthKey, current + (Number(p.price) || 0));
+                projects?.forEach(p => {
+                    let amount = 0;
+                    if (p.payment_status === 'paid') amount = Number(p.price) || 0;
+                    else if (p.payment_status === 'deposit_paid') amount = Number(p.deposit_amount) || 0;
+                    else if (p.is_paid) amount = Number(p.price) || 0; // Fallback
+
+                    if (amount > 0) {
+                        const date = new Date(p.created_at);
+                        const monthKey = months[date.getMonth()];
+                        const current = monthlyData.get(monthKey) || 0;
+                        monthlyData.set(monthKey, current + amount);
+                    }
                 });
 
                 // Get last 6 months for trend
