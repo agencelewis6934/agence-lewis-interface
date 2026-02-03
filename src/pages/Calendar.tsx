@@ -4,6 +4,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import timeGridPlugin from '@fullcalendar/timegrid';
 import listPlugin from '@fullcalendar/list';
 import interactionPlugin, { type DateClickArg, type EventResizeDoneArg } from '@fullcalendar/interaction';
+import rrulePlugin from '@fullcalendar/rrule'; // Import RRule plugin
 import { type EventClickArg, type EventDropArg } from '@fullcalendar/core';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
@@ -32,6 +33,8 @@ export function Calendar() {
         eventId: null,
         eventTitle: '',
     });
+
+    // ... (fetchEvents and useEffect remain same) ...
 
     // Fetch events from Supabase
     const fetchEvents = async () => {
@@ -73,6 +76,8 @@ export function Calendar() {
         };
     }, []);
 
+    // ... (Handlers remain same) ...
+
     // Handle date click (create new event)
     const handleDateClick = (info: DateClickArg) => {
         setSelectedDate(info.date);
@@ -82,7 +87,11 @@ export function Calendar() {
 
     // Handle event click (edit event)
     const handleEventClick = (info: EventClickArg) => {
-        const event = events.find(e => e.id === info.event.id);
+        // If it's a recurring event instance, info.event.id might be same
+        // But we need to find the original event from our state
+        const eventId = info.event.id;
+        const event = events.find(e => e.id === eventId);
+
         if (event) {
             setSelectedEvent(event);
             setSelectedDate(null);
@@ -95,8 +104,14 @@ export function Calendar() {
         const event = events.find(e => e.id === info.event.id);
         if (!event) return;
 
+        // If recurring, we might want to update the whole series start_at
+        // For MVP, updating recurrence start is simple
+        // If user drags ONE instance, usually we ask "This event" or "All events".
+        // For MVP, we'll update the MAIN event start_at, which shifts the whole series.
+
         const duration = new Date(event.end_at).getTime() - new Date(event.start_at).getTime();
         const newStart = info.event.start!;
+        // Ensure we keep the duration consistent
         const newEnd = new Date(newStart.getTime() + duration);
 
         try {
@@ -124,10 +139,13 @@ export function Calendar() {
         if (!event) return;
 
         try {
+            // Calculate new duration and apply to end_at
+            // Wait, for recurring events, resize changes the duration of ALL instances?
+            // Yes, typically.
             const { error } = await supabase
                 .from('calendar_events')
                 .update({
-                    start_at: info.event.start!.toISOString(),
+                    // start_at: info.event.start!.toISOString(), // Usually start doesn't change on resize from end
                     end_at: info.event.end!.toISOString(),
                 })
                 .eq('id', event.id);
@@ -142,6 +160,7 @@ export function Calendar() {
         }
     };
 
+    // ... (rest is unchanged until return) ...
     // Handle event deletion
     const handleDeleteEvent = async () => {
         if (!deleteConfirm.eventId) return;
@@ -163,7 +182,7 @@ export function Calendar() {
         }
     };
 
-    // Change calendar view
+    // Change calendar view (unchanged)
     const changeView = (newView: CalendarView) => {
         setView(newView);
         if (calendarRef.current) {
@@ -171,7 +190,7 @@ export function Calendar() {
         }
     };
 
-    // Get category color
+    // Get category color (unchanged)
     const getCategoryColor = (category: string) => {
         switch (category) {
             case 'call': return '#3b82f6'; // blue
@@ -192,7 +211,7 @@ export function Calendar() {
 
     return (
         <div className="h-[calc(100vh-80px)] flex flex-col bg-background p-6">
-            {/* Header */}
+            {/* Header ... */}
             <div className="mb-6 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                     <CalendarIcon className="h-8 w-8 text-primary" />
@@ -251,17 +270,36 @@ export function Calendar() {
             <div className="flex-1 bg-surface rounded-lg border border-border p-4 overflow-hidden">
                 <FullCalendar
                     ref={calendarRef}
-                    plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin]}
+                    plugins={[dayGridPlugin, timeGridPlugin, listPlugin, interactionPlugin, rrulePlugin]}
                     initialView={view}
-                    events={events.map(e => ({
-                        id: e.id,
-                        title: e.title,
-                        start: e.start_at,
-                        end: e.end_at,
-                        allDay: e.all_day,
-                        backgroundColor: getCategoryColor(e.category),
-                        borderColor: getCategoryColor(e.category),
-                    }))}
+                    events={events.map(e => {
+                        const baseEvent = {
+                            id: e.id,
+                            title: e.title,
+                            backgroundColor: getCategoryColor(e.category),
+                            borderColor: getCategoryColor(e.category),
+                            allDay: e.all_day,
+                        };
+
+                        if (e.recurrence) {
+                            return {
+                                ...baseEvent,
+                                rrule: {
+                                    freq: e.recurrence, // 'daily', 'weekly', 'monthly' matches RRule strings directly (lowercase is fine for plugin)
+                                    dtstart: e.start_at,
+
+                                },
+                                // Duration is required for recurring events to have correct end time per instance
+                                duration: new Date(e.end_at).getTime() - new Date(e.start_at).getTime()
+                            };
+                        }
+
+                        return {
+                            ...baseEvent,
+                            start: e.start_at,
+                            end: e.end_at,
+                        };
+                    })}
                     dateClick={handleDateClick}
                     eventClick={handleEventClick}
                     eventDrop={handleEventDrop}
@@ -290,7 +328,7 @@ export function Calendar() {
                     allDaySlot={true}
                 />
             </div>
-
+            {/* ... Modal and ConfirmDialog remain same ... */}
             {/* Event Modal */}
             {showModal && (
                 <EventModal
