@@ -103,6 +103,27 @@ export function Clients() {
         }
     };
 
+    const handleUpdateStatus = async (clientId: string, newStatus: string) => {
+        try {
+            // Optimistic update
+            setClients(clients.map(c =>
+                c.id === clientId ? { ...c, status: newStatus } : c
+            ));
+
+            const { error } = await supabase
+                .from('clients')
+                .update({ status: newStatus })
+                .eq('id', clientId);
+
+            if (error) throw error;
+            toast.success('Statut mis à jour');
+        } catch (error) {
+            console.error('Error updating status:', error);
+            toast.error('Erreur lors de la mise à jour du statut');
+            loadClients(); // Revert on error
+        }
+    };
+
     return (
         <div className="space-y-8 pb-12">
             {/* Header */}
@@ -279,11 +300,37 @@ export function Clients() {
                                                     </div>
                                                 </td>
                                                 <td className="px-6 py-5">
-                                                    <Badge
-                                                        variant={client.status === 'active' ? 'success' : client.status === 'prospect' ? 'warning' : 'neutral'}
-                                                    >
-                                                        {client.status === 'active' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : 'Inactif'}
-                                                    </Badge>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger className="focus:outline-none">
+                                                            <div className="cursor-pointer hover:opacity-80 transition-opacity">
+                                                                <Badge
+                                                                    variant={client.status === 'active' ? 'success' : client.status === 'prospect' ? 'warning' : 'neutral'}
+                                                                >
+                                                                    {client.status === 'active' ? 'Actif' : client.status === 'prospect' ? 'Prospect' : 'Inactif'}
+                                                                </Badge>
+                                                            </div>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="start">
+                                                            <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, 'prospect')}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2 h-2 rounded-full bg-yellow-500" />
+                                                                    <span>Prospect</span>
+                                                                </div>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, 'active')}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                                                                    <span>Actif</span>
+                                                                </div>
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleUpdateStatus(client.id, 'inactive')}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-2 h-2 rounded-full bg-gray-500" />
+                                                                    <span>Inactif</span>
+                                                                </div>
+                                                            </DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </td>
                                                 <td className="px-6 py-5">
                                                     <div className="flex items-center gap-2">
