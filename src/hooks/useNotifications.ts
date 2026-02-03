@@ -1,15 +1,11 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { type CalendarEvent } from '../types/calendar';
-import { type Project } from '../types/project';
-import { Calendar, AlertCircle } from 'lucide-react';
-import React from 'react';
 
 export interface Notification {
     id: string;
     title: string;
     time: string;
-    icon: React.ReactNode;
     type: 'event' | 'deadline';
     link?: string;
 }
@@ -55,7 +51,6 @@ export function useNotifications() {
                         id: `proj-${p.id}`,
                         title: `Deadline: ${p.name}`,
                         time: isToday ? "Aujourd'hui" : "Demain",
-                        icon: <AlertCircle className="h-5 w-5 text-red-500" />,
                         type: 'deadline'
                     });
                 });
@@ -68,25 +63,20 @@ export function useNotifications() {
                     const start = new Date(e.start_at);
                     const reminderTime = new Date(start.getTime() - e.reminder_minutes * 60000);
 
-                    // If reminder time has passed AND event hasn't started yet (or is close)
-                    // Simplified logic: Show if we are within the window [Reminder Time, Start Time]
-                    // Or maybe just show it if it's coming up soon.
-
-                    // User Request: "au moment du rappel, ca envoie un notification"
-                    // We'll show it if Now >= ReminderTime AND Now < StartTime
+                    // Show if we are within the window [Reminder Time, Start Time]
+                    // And keep showing it until it starts
 
                     if (now >= reminderTime && now < start) {
                         const diffMinutes = Math.floor((start.getTime() - now.getTime()) / 60000);
                         let timeText = `Dans ${diffMinutes} min`;
                         if (diffMinutes > 60) timeText = `Dans ${Math.floor(diffMinutes / 60)}h`;
                         if (diffMinutes > 1440) timeText = `Demain`;
-                        if (diffMinutes < 0) timeText = 'Maintenant'; // Should be covered by < start check
+                        if (diffMinutes <= 0) timeText = 'Maintenant';
 
                         notifs.push({
                             id: `evt-${e.id}`,
                             title: `Rappel: ${e.title}`,
                             time: timeText,
-                            icon: <Calendar className="h-5 w-5 text-primary" />,
                             type: 'event'
                         });
                     }
