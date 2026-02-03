@@ -9,6 +9,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Avatar } from '../components/ui/Avatar';
+import { cn } from '../lib/utils';
 import { motion } from 'framer-motion';
 import { supabase } from '../lib/supabase';
 import { CreateClientModal } from '../components/clients/CreateClientModal';
@@ -23,6 +24,8 @@ export function Clients() {
     const [deleteConfirm, setDeleteConfirm] = useState<{ isOpen: boolean; clientId: string | null; clientName: string }>({ isOpen: false, clientId: null, clientName: '' });
     const [viewModal, setViewModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
     const [editModal, setEditModal] = useState<{ isOpen: boolean; client: any | null }>({ isOpen: false, client: null });
+    const [contactFilter, setContactFilter] = useState(false);
+    const [statusFilter, setStatusFilter] = useState<'prospect' | 'active' | 'inactive' | null>(null);
 
     useEffect(() => {
         loadClients();
@@ -47,12 +50,17 @@ export function Clients() {
     };
 
     const filteredClients = useMemo(() => {
-        return clients.filter(client =>
-            (client.contact_name && client.contact_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (client.company_name && client.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-            (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase()))
-        );
-    }, [clients, searchQuery]);
+        return clients.filter(client => {
+            const matchesSearch = (client.contact_name && client.contact_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (client.company_name && client.company_name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+                (client.email && client.email.toLowerCase().includes(searchQuery.toLowerCase()));
+
+            const matchesContact = !contactFilter || (client.phone || client.email);
+            const matchesStatus = !statusFilter || client.status === statusFilter;
+
+            return matchesSearch && matchesContact && matchesStatus;
+        });
+    }, [clients, searchQuery, contactFilter, statusFilter]);
 
     const pipeline = useMemo(() => {
         const counts = {
@@ -62,9 +70,9 @@ export function Clients() {
         };
 
         return [
-            { stage: 'Prospects', count: counts.Prospects, color: 'from-blue-500 to-cyan-600', icon: Sparkles },
-            { stage: 'Clients Actifs', count: counts.Active, color: 'from-emerald-500 to-teal-600', icon: TrendingUp },
-            { stage: 'Inactifs', count: counts.Inactive, color: 'from-gray-500 to-gray-600', icon: Filter },
+            { stage: 'Prospects', count: counts.Prospects, color: 'from-blue-500 to-cyan-600', icon: Sparkles, id: 'prospect' },
+            { stage: 'Clients Actifs', count: counts.Active, color: 'from-emerald-500 to-teal-600', icon: TrendingUp, id: 'active' },
+            { stage: 'Inactifs', count: counts.Inactive, color: 'from-gray-500 to-gray-600', icon: Filter, id: 'inactive' },
         ];
     }, [clients]);
 
@@ -137,8 +145,14 @@ export function Clients() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 + i * 0.05 }}
+                        onClick={() => setStatusFilter(statusFilter === item.id ? null : item.id as any)}
+                        className="cursor-pointer"
                     >
-                        <Card hoverable className="group relative overflow-hidden bg-opacity-40 backdrop-blur-md">
+                        <Card hoverable className={cn(
+                            "group relative overflow-hidden transition-all duration-300",
+                            statusFilter === item.id ? "ring-2 ring-primary scale-[1.02] bg-surface-elevated" : "bg-opacity-40 backdrop-blur-md hover:bg-surface-elevated/50",
+                            statusFilter && statusFilter !== item.id && "opacity-50 grayscale-[0.5]"
+                        )}>
                             <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
 
                             <div className="absolute -right-6 -top-6 opacity-5 group-hover:opacity-10 transition-opacity">
@@ -177,6 +191,19 @@ export function Clients() {
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                 />
+                            </div>
+
+                            <div className="flex items-center gap-2 px-3 py-2 bg-surface border border-border rounded-xl cursor-pointer select-none hover:border-primary/50 transition-colors"
+                                onClick={() => setContactFilter(!contactFilter)}>
+                                <div className={cn(
+                                    "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+                                    contactFilter ? "bg-primary border-primary" : "border-text-muted"
+                                )}>
+                                    {contactFilter && <User className="h-3 w-3 text-white" />}
+                                </div>
+                                <span className={cn("text-sm font-medium", contactFilter ? "text-white" : "text-text-muted")}>
+                                    Contactables uniquement
+                                </span>
                             </div>
                         </div>
                         <p className="text-sm text-text-subtle font-medium">{filteredClients.length} clients trouvés</p>
