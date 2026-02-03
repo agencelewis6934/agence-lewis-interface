@@ -28,6 +28,8 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
         start_at: new Date(),
         end_at: new Date(Date.now() + 60 * 60 * 1000), // +1 hour
         all_day: false,
+        recurrence: null,
+        reminder_minutes: 0,
     });
 
     useEffect(() => {
@@ -42,6 +44,8 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                 start_at: new Date(event.start_at),
                 end_at: new Date(event.end_at),
                 all_day: event.all_day,
+                recurrence: event.recurrence || null,
+                reminder_minutes: event.reminder_minutes ?? 0,
             });
         } else if (initialDate) {
             // Create mode with initial date
@@ -89,6 +93,8 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                 start_at: formData.start_at.toISOString(),
                 end_at: formData.end_at.toISOString(),
                 all_day: formData.all_day,
+                recurrence: formData.recurrence || null,
+                reminder_minutes: formData.reminder_minutes || 0,
             };
 
             // Only add created_by if user exists (for compatibility with mock auth)
@@ -250,6 +256,41 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                             className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
                             required
                         />
+                    </div>
+
+                    {/* Recurrence & Reminder */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                Répétition
+                            </label>
+                            <select
+                                value={formData.recurrence || ''}
+                                onChange={(e) => setFormData({ ...formData, recurrence: (e.target.value as any) || null })}
+                                className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
+                            >
+                                <option value="">Aucune</option>
+                                <option value="daily">Tous les jours</option>
+                                <option value="weekly">Toutes les semaines</option>
+                                <option value="monthly">Tous les mois</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-white mb-2">
+                                Rappel
+                            </label>
+                            <select
+                                value={formData.reminder_minutes || 0}
+                                onChange={(e) => setFormData({ ...formData, reminder_minutes: parseInt(e.target.value) })}
+                                className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
+                            >
+                                <option value="0">À l'heure de l'événement</option>
+                                <option value="10">10 minutes avant</option>
+                                <option value="30">30 minutes avant</option>
+                                <option value="60">1 heure avant</option>
+                                <option value="1440">1 jour avant</option>
+                            </select>
+                        </div>
                     </div>
 
                     {/* Description */}

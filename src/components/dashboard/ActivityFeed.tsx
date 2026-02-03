@@ -1,12 +1,13 @@
 import React from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Calendar, AlertCircle } from 'lucide-react';
 import { Avatar } from '../ui/Avatar';
-
-const notifications: any[] = [];
+import { useNotifications } from '../../hooks/useNotifications';
 
 const activities: any[] = [];
 
 export const ActivityFeed: React.FC = () => {
+    const { notifications } = useNotifications();
+
     return (
         <div className="space-y-8">
             {/* Notifications Section */}
@@ -23,8 +24,12 @@ export const ActivityFeed: React.FC = () => {
                     ) : (
                         notifications.map((notif) => (
                             <div key={notif.id} className="flex items-center gap-4 group cursor-pointer hover:translate-x-1 transition-transform">
-                                <div className="h-10 w-10 rounded-full bg-surface-hover flex items-center justify-center flex-shrink-0 group-hover:bg-surface-elevated transition-colors border border-border/10">
-                                    {notif.icon}
+                                <div className={`h-10 w-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors border border-border/10 ${notif.type === 'deadline' ? 'bg-red-500/10' : 'bg-surface-hover group-hover:bg-surface-elevated'}`}>
+                                    {notif.type === 'deadline' ? (
+                                        <AlertCircle className="h-5 w-5 text-red-500" />
+                                    ) : (
+                                        <Calendar className="h-5 w-5 text-primary" />
+                                    )}
                                 </div>
                                 <div className="flex flex-col">
                                     <span className="text-sm font-semibold text-white group-hover:text-primary transition-colors">{notif.title}</span>

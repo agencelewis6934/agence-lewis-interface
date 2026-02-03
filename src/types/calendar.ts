@@ -9,6 +9,8 @@ export interface CalendarEvent {
     start_at: string; // ISO 8601 timestamp
     end_at: string;   // ISO 8601 timestamp
     all_day: boolean;
+    recurrence?: 'daily' | 'weekly' | 'monthly' | null;
+    reminder_minutes?: number | null;
     created_by: string;
     created_at: string;
     updated_at: string;
@@ -23,6 +25,8 @@ export interface EventFormData {
     start_at: Date;
     end_at: Date;
     all_day: boolean;
+    recurrence?: 'daily' | 'weekly' | 'monthly' | null;
+    reminder_minutes?: number | null;
 }
 
 export type CalendarView = 'dayGridMonth' | 'timeGridWeek' | 'timeGridDay' | 'listWeek';
