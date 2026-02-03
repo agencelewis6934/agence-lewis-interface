@@ -29,6 +29,7 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
         end_at: new Date(Date.now() + 60 * 60 * 1000), // +1 hour
         all_day: false,
         recurrence: null,
+        recurrence_end: null,
         reminder_minutes: 0,
     });
 
@@ -45,6 +46,7 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                 end_at: new Date(event.end_at),
                 all_day: event.all_day,
                 recurrence: event.recurrence || null,
+                recurrence_end: event.recurrence_end ? new Date(event.recurrence_end) : null,
                 reminder_minutes: event.reminder_minutes ?? 0,
             });
         } else if (initialDate) {
@@ -94,6 +96,7 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                 end_at: formData.end_at.toISOString(),
                 all_day: formData.all_day,
                 recurrence: formData.recurrence || null,
+                recurrence_end: formData.recurrence_end ? formData.recurrence_end.toISOString() : null,
                 reminder_minutes: formData.reminder_minutes || 0,
             };
 
@@ -275,6 +278,19 @@ export function EventModal({ event, initialDate, isOpen, onClose, onSave, onDele
                                 <option value="monthly">Tous les mois</option>
                             </select>
                         </div>
+                        {formData.recurrence && (
+                            <div>
+                                <label className="block text-sm font-medium text-white mb-2">
+                                    Jusqu'au
+                                </label>
+                                <input
+                                    type="date"
+                                    value={formData.recurrence_end ? new Date(formData.recurrence_end).toISOString().split('T')[0] : ''}
+                                    onChange={(e) => setFormData({ ...formData, recurrence_end: e.target.value ? new Date(e.target.value) : null })}
+                                    className="w-full bg-surface-elevated border border-border rounded-lg px-4 py-2 text-white focus:outline-none focus:border-primary"
+                                />
+                            </div>
+                        )}
                         <div>
                             <label className="block text-sm font-medium text-white mb-2">
                                 Rappel

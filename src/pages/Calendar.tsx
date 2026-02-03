@@ -287,7 +287,7 @@ export function Calendar() {
                                 rrule: {
                                     freq: e.recurrence, // 'daily', 'weekly', 'monthly' matches RRule strings directly (lowercase is fine for plugin)
                                     dtstart: e.start_at,
-
+                                    until: e.recurrence_end || undefined, // Add end date for recurrence
                                 },
                                 // Duration is required for recurring events to have correct end time per instance
                                 duration: new Date(e.end_at).getTime() - new Date(e.start_at).getTime()

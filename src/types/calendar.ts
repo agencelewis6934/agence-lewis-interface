@@ -10,6 +10,7 @@ export interface CalendarEvent {
     end_at: string;   // ISO 8601 timestamp
     all_day: boolean;
     recurrence?: 'daily' | 'weekly' | 'monthly' | null;
+    recurrence_end?: string | null; // ISO 8601 timestamp
     reminder_minutes?: number | null;
     created_by: string;
     created_at: string;
@@ -26,6 +27,7 @@ export interface EventFormData {
     end_at: Date;
     all_day: boolean;
     recurrence?: 'daily' | 'weekly' | 'monthly' | null;
+    recurrence_end?: Date | null;
     reminder_minutes?: number | null;
 }
 
