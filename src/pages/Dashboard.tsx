@@ -46,26 +46,26 @@ export const Dashboard: React.FC = () => {
             {/* Top KPI Cards Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <KpiCard
-                    title="Projets Terminés"
-                    value={kpi.completedProjects.toString()}
-                    trendType="up"
-                    icon={<CheckCircle2 size={20} />}
-                    subtitle="Nombre de projets terminés"
-                    delay={0.1}
-                />
-                <KpiCard
                     title="Revenu Potentiel"
                     value={kpi.potentialRevenue.toLocaleString('fr-FR', { style: 'currency', currency: 'EUR' }) || '0 €'}
                     trendType="up"
                     icon={<TrendingUp size={20} />}
                     subtitle="Total des projets (payés ou non)"
-                    delay={0.2}
+                    delay={0.1}
                 />
                 <KpiCard
                     title="Projets Actifs"
                     value={kpi.activeProjects.toString()}
                     icon={<Activity size={20} />}
                     subtitle="En cours"
+                    delay={0.2}
+                />
+                <KpiCard
+                    title="Projets Terminés"
+                    value={kpi.completedProjects.toString()}
+                    trendType="up"
+                    icon={<CheckCircle2 size={20} />}
+                    subtitle="Nombre de projets terminés"
                     delay={0.3}
                 />
                 <KpiCard
